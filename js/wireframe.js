@@ -340,9 +340,11 @@ function renderSolutions(){
   wrap.innerHTML = '<div class="sol-list">'+CLUSTERS.map(function(c){
     var items = c.services.map(function(s){
       return '<a class="svc-line" href="'+sol(s.slug)+'">'+
-        '<span class="svc-line__name">'+s.abbr+(s.isNew?'<span class="new">Nowość</span>':'')+'</span>'+
+        '<span class="svc-line__top">'+
+          '<span class="svc-line__name">'+s.abbr+(s.isNew?'<span class="new">Nowość</span>':'')+'</span>'+
+          '<span class="svc-line__go" aria-hidden="true">→</span>'+
+        '</span>'+
         '<span class="svc-line__desc">'+s.desc+'</span>'+
-        '<span class="svc-line__go" aria-hidden="true">→</span>'+
       '</a>';
     }).join("");
     return '<div class="sol-row" id="'+c.id+'">'+
