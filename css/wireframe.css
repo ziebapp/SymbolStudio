@@ -211,40 +211,74 @@ main>section:first-child:not(.hero){padding-top:calc(var(--header-h) + 40px)}
 .wordmark--boxed{border:2px solid currentColor;border-radius:6px;padding:3px 10px;font-size:15px}
 
 /* =========================================================================
-   ROZWIĄZANIA (Home) — aple rozwijane na hover, z ikoną klastra
+   ROZWIĄZANIA (Home) — grid 3+2 dużych kafli, dwa stany na hover
    ========================================================================= */
-.sol-list{display:flex;flex-direction:column;gap:14px}
-.sol-row{border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden;
-  transition:border-color .25s,box-shadow .25s}
-.sol-row:hover,.sol-row.open{border-color:var(--ink);box-shadow:0 18px 44px rgba(15,15,15,.07)}
-.sol-row__head{display:grid;grid-template-columns:60px 1fr auto;gap:22px;align-items:center;
-  padding:26px 30px;width:100%;background:none;border:0;text-align:left;cursor:pointer}
-.sol-row__icon{width:52px;height:52px;border:1px solid var(--line-strong);border-radius:13px;
-  display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .2s,color .2s}
-.sol-row__icon svg{width:28px;height:28px;display:block}
-.sol-row:hover .sol-row__icon,.sol-row.open .sol-row__icon{background:var(--ink);color:#fff;border-color:var(--ink)}
-.sol-row__name{font-size:clamp(19px,2.1vw,26px);font-weight:500;color:var(--ink);line-height:1.2}
-.sol-row__pl{display:block;font-size:14px;font-weight:400;color:var(--mut);margin-top:5px;max-width:70ch}
-.sol-row__side{display:flex;align-items:center;gap:18px}
-.sol-row__count{font-size:13px;color:var(--faint);white-space:nowrap}
-.sol-row__chev{width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);
-  display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink);
-  transition:transform .3s,background .2s,border-color .2s}
-.sol-row:hover .sol-row__chev,.sol-row.open .sol-row__chev{transform:rotate(180deg);background:var(--ink);color:#fff;border-color:var(--ink)}
-.sol-row__body{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1)}
-.sol-row:hover .sol-row__body,.sol-row.open .sol-row__body{max-height:640px}
-/* dwie kolumny — cała lista klastra mieści się na jednym ekranie */
-.sol-row__inner{padding:2px 30px 24px 112px;display:grid;grid-template-columns:1fr 1fr;column-gap:40px}
-.svc-line{display:block;padding:12px 10px;border-top:1px solid var(--line);border-radius:8px;transition:background .16s}
-a.svc-line:hover{background:var(--soft)}
-.svc-line__top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.svc-line__name{font-weight:500;font-size:15.5px;color:var(--ink)}
-.svc-line__name .new{font-size:9.5px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;
-  color:var(--ink);border:1px solid var(--line-strong);border-radius:999px;padding:2px 6px;margin-left:8px;vertical-align:1px}
-.svc-line__desc{display:block;font-size:12.5px;color:var(--mut);margin-top:2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.svc-line__go{font-size:16px;color:var(--faint);flex:0 0 auto;transition:transform .16s,color .16s}
-a.svc-line:hover .svc-line__go{color:var(--ink);transform:translateX(3px)}
+.sol-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:20px}
+.sol-tile{position:relative;height:440px;border-radius:22px;background:#E7E9ED;overflow:hidden;
+  transition:background .3s ease}
+.sol-tile:nth-child(1),
+.sol-tile:nth-child(2),
+.sol-tile:nth-child(3){grid-column:span 2}
+.sol-tile:nth-child(4),
+.sol-tile:nth-child(5){grid-column:span 3}
+.sol-tile:hover{background:#D9DCE1}
+
+.sol-tile__title{font-size:clamp(22px,2vw,28px);letter-spacing:.02em;text-transform:uppercase;
+  font-weight:500;line-height:1.1;color:var(--ink);position:relative;z-index:2}
+.sol-tile__desc{color:#5E5E5E;font-size:14.5px;margin-top:12px;max-width:36ch;position:relative;z-index:2}
+
+/* dwa stany — obydwa w tej samej ramce, absolutne pozycjonowanie */
+.sol-tile__state{position:absolute;inset:0;padding:34px 36px 30px;display:flex;flex-direction:column;
+  transition:opacity .35s ease,transform .35s ease}
+.sol-tile__state--inactive{opacity:1;transform:none;z-index:2}
+.sol-tile__state--active{opacity:0;transform:translateY(6px);z-index:3;pointer-events:none;
+  transition-delay:0s}
+.sol-tile:hover .sol-tile__state--inactive{opacity:0;transform:translateY(-6px);pointer-events:none}
+.sol-tile:hover .sol-tile__state--active{opacity:1;transform:none;pointer-events:auto;transition-delay:.06s}
+
+/* ilustracja w stanie nieaktywnym */
+.sol-tile__illu{flex:1;display:flex;align-items:center;justify-content:center;color:#B4B8C0;margin:8px 0}
+.sol-tile__illu svg{width:96px;height:96px;display:block;stroke-width:1.4}
+.sol-tile__plus{position:absolute;left:36px;bottom:32px;width:44px;height:44px;border-radius:50%;
+  background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;
+  color:var(--ink);border:1px solid rgba(0,0,0,.06);z-index:4;
+  transition:opacity .3s ease,transform .3s ease}
+.sol-tile:hover .sol-tile__plus{opacity:0;transform:scale(.8);pointer-events:none}
+
+/* aktywny stan — lista usług */
+.sol-tile__list{margin:20px 0 0;padding:0;list-style:none;flex:1;overflow:hidden;display:grid;gap:0;
+  align-content:start}
+/* 2 kolumny tylko w szerokich kaflach (bottom row); wąskie dense zostają 1-kolumnowe */
+.sol-tile--wide .sol-tile__list{grid-template-columns:1fr 1fr;column-gap:20px}
+.sol-tile__svc{position:relative;display:block;padding:11px 40px 11px 18px;font-size:14.5px;color:var(--ink);
+  border-bottom:1px solid rgba(0,0,0,.08);overflow:hidden;
+  transition:padding-left .18s ease,color .18s ease}
+.sol-tile__svc::before{content:"";position:absolute;left:2px;top:50%;width:7px;height:7px;
+  border-radius:50%;background:#8C919B;transform:translateY(-50%);transition:background .18s}
+.sol-tile__svc:hover{padding-left:22px}
+.sol-tile__svc:hover::before{background:var(--ink)}
+/* nazwa i CTA nakładają się na siebie — zamiana crossfade bez zmiany wysokości */
+.sol-tile__svc__name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity .18s ease,transform .18s ease}
+.sol-tile__svc__cta{position:absolute;left:18px;right:14px;top:50%;transform:translateY(-50%) translateX(-6px);
+  font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap;
+  opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+.sol-tile__svc:hover .sol-tile__svc__name{opacity:0;transform:translateX(6px)}
+.sol-tile__svc:hover .sol-tile__svc__cta{opacity:1;transform:translateY(-50%) translateX(0)}
+.sol-tile__svc .new{font-size:9.5px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink);border:1px solid rgba(0,0,0,.15);border-radius:999px;padding:2px 6px;margin-left:6px;vertical-align:1px}
+
+/* zwarte spacery dla klastrów z większą liczbą pozycji */
+.sol-tile--dense .sol-tile__svc{padding-top:6.5px;padding-bottom:6.5px;font-size:13.5px}
+/* wąski + dense (c1: 9 usług w wąskim kaflu) — mniej pionowo, 1 kolumna */
+.sol-tile--dense:not(.sol-tile--wide) .sol-tile__svc{padding-top:5px;padding-bottom:5px;font-size:13px}
+
+/* ================= dotyk (bez hover) — zawsze widoczny stan aktywny ==== */
+@media (hover:none){
+  .sol-tile__state--inactive{opacity:0;pointer-events:none}
+  .sol-tile__state--active{opacity:1;transform:none;pointer-events:auto}
+  .sol-tile__plus{opacity:0;pointer-events:none}
+}
 
 /* karty rozwiązań (hub + strony dostawców) */
 .sol-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -539,6 +573,27 @@ a.event-card:hover .event-card__cta{color:var(--mut)}
   .sup-grid,.event-grid{grid-template-columns:repeat(2,1fr)}
   .why{grid-template-columns:1fr;gap:36px}
   .why__media{min-height:380px}
+  .sol-grid{grid-template-columns:repeat(2,1fr)}
+  .sol-tile:nth-child(n){grid-column:span 1}
+  .sol-tile:nth-child(5){grid-column:1 / -1}
+  .sol-tile--wide .sol-tile__list{grid-template-columns:1fr 1fr}
+  /* na tablecie bez hovera — od razu pokazuj listę usług */
+  .sol-tile{height:auto;min-height:380px}
+  .sol-tile__state{position:relative;inset:auto}
+  .sol-tile__state--inactive{display:none}
+  .sol-tile__state--active{opacity:1;transform:none;pointer-events:auto}
+  .sol-tile__plus{display:none}
+}
+@media (max-width:720px){
+  .sol-grid{grid-template-columns:1fr}
+  .sol-tile:nth-child(n){grid-column:1 / -1}
+  .sol-tile--wide .sol-tile__list{grid-template-columns:1fr 1fr}
+  .sol-tile{height:auto;min-height:340px}
+  /* na mobilu bez hovera — od razu pokazuj listę usług */
+  .sol-tile__state{position:relative;inset:auto;padding:32px 28px 28px}
+  .sol-tile__state--inactive{display:none}
+  .sol-tile__state--active{opacity:1;transform:none;pointer-events:auto}
+  .sol-tile__plus{display:none}
 }
 @media (max-width:960px){
   .hero__grid{grid-template-columns:1fr;gap:36px}

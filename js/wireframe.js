@@ -337,46 +337,32 @@ function renderFooter(){
 function renderSolutions(){
   var wrap=document.getElementById("solutions-mount");
   if(!wrap) return;
-  wrap.innerHTML = '<div class="sol-list">'+CLUSTERS.map(function(c){
+  wrap.innerHTML = '<div class="sol-grid">'+CLUSTERS.map(function(c,i){
+    /* wide (dolny rząd) = 4. i 5. kafel */
+    var isWide = i>=3;
+    /* dense = klastry z większą liczbą pozycji, aby zmieściły się na wysokość */
+    var isDense = c.services.length>=8;
     var items = c.services.map(function(s){
-      return '<a class="svc-line" href="'+sol(s.slug)+'">'+
-        '<span class="svc-line__top">'+
-          '<span class="svc-line__name">'+s.abbr+(s.isNew?'<span class="new">Nowość</span>':'')+'</span>'+
-          '<span class="svc-line__go" aria-hidden="true">→</span>'+
-        '</span>'+
-        '<span class="svc-line__desc">'+s.desc+'</span>'+
-      '</a>';
+      return '<li><a class="sol-tile__svc" href="'+sol(s.slug)+'">'+
+        '<span class="sol-tile__svc__name">'+s.abbr+'</span>'+
+        '<span class="sol-tile__svc__cta">Przejdź do rozwiązania →</span>'+
+      '</a></li>';
     }).join("");
-    return '<div class="sol-row" id="'+c.id+'">'+
-      '<button class="sol-row__head" aria-expanded="false">'+
-        '<span class="sol-row__icon">'+clusterIcon(c.id)+'</span>'+
-        '<span class="sol-row__name">'+c.name+
-          '<span class="sol-row__pl">'+c.desc+'</span></span>'+
-        '<span class="sol-row__side">'+
-          '<span class="sol-row__count">'+c.services.length+' rozwiązań</span>'+
-          '<span class="sol-row__chev" aria-hidden="true">▼</span></span>'+
-      '</button>'+
-      '<div class="sol-row__body"><div class="sol-row__inner">'+items+'</div></div>'+
+    return '<div class="sol-tile'+(isWide?' sol-tile--wide':'')+(isDense?' sol-tile--dense':'')+'" id="'+c.id+'">'+
+      /* STAN NIEAKTYWNY */
+      '<div class="sol-tile__state sol-tile__state--inactive">'+
+        '<h3 class="sol-tile__title">'+c.name+'</h3>'+
+        '<p class="sol-tile__desc">'+c.desc+'</p>'+
+        '<div class="sol-tile__illu" aria-hidden="true">'+clusterIcon(c.id)+'</div>'+
+      '</div>'+
+      '<span class="sol-tile__plus" aria-hidden="true">+</span>'+
+      /* STAN AKTYWNY */
+      '<div class="sol-tile__state sol-tile__state--active">'+
+        '<h3 class="sol-tile__title">'+c.name+'</h3>'+
+        '<ul class="sol-tile__list">'+items+'</ul>'+
+      '</div>'+
     '</div>';
   }).join("")+'</div>';
-
-  wrap.querySelectorAll(".sol-row").forEach(function(row){
-    var head=row.querySelector(".sol-row__head");
-    /* hover rozwija aplę (desktop) */
-    row.addEventListener("mouseenter",function(){ head.setAttribute("aria-expanded","true"); });
-    row.addEventListener("mouseleave",function(){
-      if(!row.classList.contains("open")) head.setAttribute("aria-expanded","false");
-    });
-    /* klik przypina/odpina (dotyk + trwałe rozwinięcie) */
-    head.addEventListener("click",function(){
-      var open=!row.classList.contains("open");
-      wrap.querySelectorAll(".sol-row").forEach(function(r){
-        r.classList.remove("open");
-        r.querySelector(".sol-row__head").setAttribute("aria-expanded","false");
-      });
-      if(open){ row.classList.add("open"); head.setAttribute("aria-expanded","true"); }
-    });
-  });
 }
 
 /* Hub rozwiązań — pełne bloki kategorii */
