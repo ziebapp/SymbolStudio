@@ -26,6 +26,16 @@ function sygnetSVG(){
   return '<span class="sygnet" aria-hidden="true">A</span>';
 }
 
+/* Ikony klastrów — placeholdery w stylu IBM Carbon (linia, 32px, currentColor) */
+var ICONS = {
+  c1:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="14" width="18" height="12" rx="1.5"/><path d="M11 14v-3a5 5 0 0 1 10 0v3"/><path d="M16 19v3"/></svg>',
+  c2:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="12.5" r="7"/><path d="M13 12.5l2 2 4-4"/><path d="M12 18.5l-2 8.5 6-3 6 3-2-8.5"/></svg>',
+  c3:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="24" height="18" rx="2"/><circle cx="12" cy="14" r="3"/><path d="M7 22c0-3 2.4-4.5 5-4.5s5 1.5 5 4.5"/><path d="M20 12.5h5M20 16h5M20 19.5h3"/></svg>',
+  c4:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 5H9a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9"/><path d="M11 12h6M11 16h4"/><path d="M20 5.5l4 4-7.5 7.5-4.5 1 1-4.5 7-8z"/></svg>',
+  c5:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4v22"/><path d="M9 8h14"/><path d="M9 8l-4 8a4 4 0 0 0 8 0l-4-8z"/><path d="M23 8l-4 8a4 4 0 0 0 8 0l-4-8z"/><path d="M11 27h10"/></svg>'
+};
+function clusterIcon(id){ return ICONS[id] || ''; }
+
 /* =========================================================================
    KATALOG ROZWIĄZAŃ — 5 kategorii (nazwy wg strategii marki)
    ========================================================================= */
@@ -176,9 +186,11 @@ function buildMega(){
     var items = c.services.map(function(s){
       return '<a class="mega__link" href="'+sol(s.slug)+'">'+s.abbr+'</a>';
     }).join("");
-    return '<div class="mega__col"><h4><a href="'+PAGES.hub+'#'+c.id+'">'+c.name+'</a></h4>'+items+'</div>';
+    return '<div class="mega__col"><h4><span class="mega__ic">'+clusterIcon(c.id)+'</span>'+
+      '<a href="'+PAGES.hub+'#'+c.id+'">'+c.name+'</a></h4>'+items+'</div>';
   }).join("");
-  return '<div class="mega" role="menu">'+cols+
+  return '<div class="mega" role="menu">'+
+    '<div class="mega__inner">'+cols+'</div>'+
     '<div class="mega__foot"><span class="muted">Nie wiesz, od czego zacząć? Pomożemy dobrać rozwiązanie do Twojej sytuacji.</span>'+
     '<a class="link-arrow" href="'+PAGES.hub+'">Wszystkie rozwiązania <span class="a">→</span></a></div></div>';
 }
@@ -212,7 +224,7 @@ function renderHeader(active){
         '</div>'+
         '<span class="nav__spacer"></span>'+
         '<div class="nav__cta">'+
-          '<a class="btn btn--primary btn--sm" href="'+PAGES.contact+'">Darmowa konsultacja</a>'+
+          '<a class="btn btn--primary btn--sm" href="'+PAGES.contact+'" data-consult-modal>Darmowa konsultacja</a>'+
         '</div>'+
         '<button class="nav__burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>'+
       '</nav>'+
@@ -221,7 +233,7 @@ function renderHeader(active){
   '<div class="mobile-nav" id="mobileNav">'+
     '<a href="'+PAGES.hub+'"><b>Rozwiązania</b></a>'+ mobileClusters +
     mobileMain +
-    '<div class="cta-wrap"><a class="btn btn--primary btn--block" href="'+PAGES.contact+'">Darmowa konsultacja</a></div>'+
+    '<div class="cta-wrap"><a class="btn btn--primary btn--block" href="'+PAGES.contact+'" data-consult-modal>Darmowa konsultacja</a></div>'+
   '</div>';
 
   wireHeader();
@@ -325,39 +337,42 @@ function renderFooter(){
 function renderSolutions(){
   var wrap=document.getElementById("solutions-mount");
   if(!wrap) return;
-  wrap.innerHTML = '<div class="sol-tiles">'+CLUSTERS.map(function(c,i){
-    var cards = c.services.map(function(s){
-      return '<a class="sol-card" href="'+sol(s.slug)+'">'+
-        '<span class="sol-card__name">'+s.abbr+(s.isNew?'<span class="new">Nowość eIDAS 2.0</span>':'')+'</span>'+
-        '<span class="sol-card__desc">'+s.desc+'</span>'+
-        '<span class="sol-card__go">Przejdź do rozwiązania <span aria-hidden="true">→</span></span>'+
+  wrap.innerHTML = '<div class="sol-list">'+CLUSTERS.map(function(c){
+    var items = c.services.map(function(s){
+      return '<a class="svc-line" href="'+sol(s.slug)+'">'+
+        '<span class="svc-line__name">'+s.abbr+(s.isNew?'<span class="new">Nowość</span>':'')+'</span>'+
+        '<span class="svc-line__desc">'+s.desc+'</span>'+
+        '<span class="svc-line__go" aria-hidden="true">→</span>'+
       '</a>';
     }).join("");
-    return '<div class="sol-tile'+(i===0?' open':'')+'" id="'+c.id+'">'+
-      '<button class="sol-tile__head" aria-expanded="'+(i===0)+'">'+
-        '<span class="sol-tile__n">0'+c.n+'</span>'+
-        '<span class="sol-tile__name">'+c.name+
-          '<span class="sol-tile__pl">'+c.desc+'</span></span>'+
-        '<span class="sol-tile__side">'+
-          '<span class="sol-tile__count">'+c.services.length+' rozwiązań</span>'+
-          '<span class="sol-tile__chev" aria-hidden="true">▼</span></span>'+
+    return '<div class="sol-row" id="'+c.id+'">'+
+      '<button class="sol-row__head" aria-expanded="false">'+
+        '<span class="sol-row__icon">'+clusterIcon(c.id)+'</span>'+
+        '<span class="sol-row__name">'+c.name+
+          '<span class="sol-row__pl">'+c.desc+'</span></span>'+
+        '<span class="sol-row__side">'+
+          '<span class="sol-row__count">'+c.services.length+' rozwiązań</span>'+
+          '<span class="sol-row__chev" aria-hidden="true">▼</span></span>'+
       '</button>'+
-      '<div class="sol-tile__body"><div class="sol-cards">'+cards+'</div></div>'+
+      '<div class="sol-row__body"><div class="sol-row__inner">'+items+'</div></div>'+
     '</div>';
   }).join("")+'</div>';
 
-  wrap.querySelectorAll(".sol-tile__head").forEach(function(head){
+  wrap.querySelectorAll(".sol-row").forEach(function(row){
+    var head=row.querySelector(".sol-row__head");
+    /* hover rozwija aplę (desktop) */
+    row.addEventListener("mouseenter",function(){ head.setAttribute("aria-expanded","true"); });
+    row.addEventListener("mouseleave",function(){
+      if(!row.classList.contains("open")) head.setAttribute("aria-expanded","false");
+    });
+    /* klik przypina/odpina (dotyk + trwałe rozwinięcie) */
     head.addEventListener("click",function(){
-      var tile=head.closest(".sol-tile");
-      var open=!tile.classList.contains("open");
-      wrap.querySelectorAll(".sol-tile").forEach(function(t){
-        t.classList.remove("open");
-        t.querySelector(".sol-tile__head").setAttribute("aria-expanded","false");
+      var open=!row.classList.contains("open");
+      wrap.querySelectorAll(".sol-row").forEach(function(r){
+        r.classList.remove("open");
+        r.querySelector(".sol-row__head").setAttribute("aria-expanded","false");
       });
-      if(open){
-        tile.classList.add("open");
-        head.setAttribute("aria-expanded","true");
-      }
+      if(open){ row.classList.add("open"); head.setAttribute("aria-expanded","true"); }
     });
   });
 }
@@ -376,7 +391,7 @@ function renderHubClusters(){
     }).join("");
     return '<div class="hub-block" id="'+c.id+'">'+
       '<div class="hub-block__head">'+
-        '<div><span class="hub-block__n">0'+c.n+'</span>'+
+        '<div><span class="hub-block__n"><span class="mega__ic">'+clusterIcon(c.id)+'</span>Klaster 0'+c.n+'</span>'+
         '<h3>'+c.name+'</h3></div>'+
         '<div><p class="muted">'+c.desc+'</p></div>'+
       '</div>'+
@@ -471,6 +486,79 @@ function initAnchors(){
 }
 
 /* =========================================================================
+   MODAL KONSULTACJI — popup z blurem tła; wszystkie CTA → kontakt.html
+   otwierają modal zamiast przeładowania strony (strona zostaje jako fallback)
+   ========================================================================= */
+function initConsultModal(){
+  if(document.getElementById("consult-modal")) return;
+  var overlay=document.createElement("div");
+  overlay.className="modal-overlay";
+  overlay.id="consult-modal";
+  overlay.innerHTML=
+    '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="cm-title">'+
+      '<button class="modal__close" type="button" aria-label="Zamknij">✕</button>'+
+      '<span class="modal__eyebrow">Zacznijmy</span>'+
+      '<h2 id="cm-title">Darmowa konsultacja</h2>'+
+      '<p class="modal__sub">W 60 minut przeanalizujemy Twoją sytuację i ułożymy realny plan działania. Zostaw dane — odezwiemy się w ciągu jednego dnia roboczego.</p>'+
+      '<div class="grid g2">'+
+        '<div class="field"><label class="small muted" for="cm_name">Imię i nazwisko *</label><input class="input" id="cm_name" placeholder="Jan Kowalski"></div>'+
+        '<div class="field"><label class="small muted" for="cm_company">Firma</label><input class="input" id="cm_company" placeholder="Nazwa firmy"></div>'+
+        '<div class="field"><label class="small muted" for="cm_email">E-mail służbowy *</label><input class="input" id="cm_email" type="email" placeholder="jan.kowalski@firma.pl"></div>'+
+        '<div class="field"><label class="small muted" for="cm_phone">Telefon</label><input class="input" id="cm_phone" placeholder="+48 600 000 000"></div>'+
+      '</div>'+
+      '<div class="field" style="margin-top:14px"><label class="small muted" for="cm_msg">Czego dotyczy konsultacja?</label>'+
+        '<textarea class="input" id="cm_msg" rows="3" placeholder="Np. przygotowanie do NIS2, wdrożenie HSM, podpis kwalifikowany, centralne IAM…"></textarea></div>'+
+      '<label class="consent" style="margin-top:14px;color:var(--faint)"><input type="checkbox" id="cm_consent"> Wyrażam zgodę na przetwarzanie moich danych przez Esysco sp. z o.o. w celu kontaktu i umówienia konsultacji. *</label>'+
+      '<div style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">'+
+        '<button class="btn btn--primary" type="button" id="cm_submit">Umów konsultację</button>'+
+        '<span class="small muted">lub napisz: <b style="color:var(--ink)">contact@allaris.pl</b></span>'+
+      '</div>'+
+      '<p class="form-msg" id="cm_result" style="margin-top:12px"></p>'+
+    '</div>';
+  document.body.appendChild(overlay);
+
+  var lastFocus=null;
+  function open(){
+    lastFocus=document.activeElement;
+    overlay.classList.add("open");
+    document.body.classList.add("no-scroll");
+    var f=document.getElementById("cm_name"); if(f) setTimeout(function(){f.focus();},60);
+  }
+  function close(){
+    overlay.classList.remove("open");
+    document.body.classList.remove("no-scroll");
+    if(lastFocus&&lastFocus.focus) lastFocus.focus();
+  }
+  window.openConsultModal=open;
+
+  overlay.querySelector(".modal__close").addEventListener("click",close);
+  overlay.addEventListener("click",function(e){ if(e.target===overlay) close(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&overlay.classList.contains("open")) close(); });
+
+  document.getElementById("cm_submit").addEventListener("click",function(){
+    var name=document.getElementById("cm_name").value.trim();
+    var email=document.getElementById("cm_email").value.trim();
+    var consent=document.getElementById("cm_consent").checked;
+    var out=document.getElementById("cm_result");
+    if(!name){ out.textContent="Podaj imię i nazwisko."; return; }
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ out.textContent="Podaj poprawny adres e-mail."; return; }
+    if(!consent){ out.textContent="Zaznacz zgodę na kontakt — bez niej nie możemy się odezwać."; return; }
+    out.textContent="Dziękujemy! Odezwiemy się w ciągu jednego dnia roboczego, żeby umówić termin.";
+  });
+
+  /* modal otwiera WYŁĄCZNIE CTA w menu (nagłówek + menu mobilne);
+     pozostałe CTA konsultacji prowadzą normalnie na stronę kontakt.html */
+  document.addEventListener("click",function(e){
+    var a=e.target.closest && e.target.closest('[data-consult-modal]');
+    if(!a) return;
+    e.preventDefault();
+    var mob=document.getElementById("mobileNav");
+    if(mob) mob.classList.remove("open");
+    open();
+  });
+}
+
+/* =========================================================================
    BOOT
    ========================================================================= */
 function initWireframe(active){
@@ -485,6 +573,7 @@ function initWireframe(active){
   initFAQ();
   initLogoSwap();
   initAnchors();
+  initConsultModal();
 }
 document.addEventListener("DOMContentLoaded",function(){
   initWireframe(window.__ACTIVE_PAGE__ || "index.html");
