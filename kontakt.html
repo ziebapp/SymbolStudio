@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Darmowa konsultacja — Allaris</title>
+<meta name="description" content="Umów bezpłatną, godzinną konsultację z ekspertami Allaris — przeanalizujemy Twoją sytuację i ułożymy realny plan działania.">
+<link rel="icon" type="image/svg+xml" href="assets/sygnet.svg">
+<link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main>
+
+  <section class="hero" id="hero" style="padding-bottom:48px">
+    <div class="container">
+      <div class="crumbs"><a href="index.html">Home</a><span class="sep">/</span><span>Kontakt</span></div>
+      <span class="eyebrow">Zacznijmy</span>
+      <h1 style="max-width:18ch">Darmowa konsultacja</h1>
+      <p class="lead" style="max-width:56ch;margin-top:18px;color:var(--mut);font-size:18.5px">W 60 minut przeanalizujemy Twoją sytuację i ułożymy realny plan działania. Zostaw dane — odezwiemy się w ciągu jednego dnia roboczego, żeby umówić termin.</p>
+    </div>
+  </section>
+
+  <section class="section section--alt" id="formularz" style="padding-top:72px">
+    <div class="container" style="display:grid;grid-template-columns:1.3fr .7fr;gap:48px;align-items:start">
+      <div class="card" style="padding:36px">
+        <div class="grid g2" style="gap:18px">
+          <div><label class="small muted" for="k_name">Imię i nazwisko *</label><input class="input btn--block" id="k_name" placeholder="Jan Kowalski" style="margin-top:6px"></div>
+          <div><label class="small muted" for="k_company">Firma</label><input class="input btn--block" id="k_company" placeholder="Nazwa firmy" style="margin-top:6px"></div>
+          <div><label class="small muted" for="k_email">E-mail służbowy *</label><input class="input btn--block" id="k_email" type="email" placeholder="jan.kowalski@firma.pl" style="margin-top:6px"></div>
+          <div><label class="small muted" for="k_phone">Telefon</label><input class="input btn--block" id="k_phone" placeholder="+48 600 000 000" style="margin-top:6px"></div>
+        </div>
+        <div style="margin-top:18px"><label class="small muted" for="k_msg">Czego dotyczy konsultacja?</label>
+          <textarea class="input btn--block" id="k_msg" rows="4" placeholder="Np. przygotowanie do NIS2, wdrożenie HSM, podpis kwalifikowany, centralne IAM…" style="margin-top:6px;border-radius:16px"></textarea></div>
+        <label class="consent" style="margin-top:16px"><input type="checkbox" id="k_consent"> Wyrażam zgodę na przetwarzanie moich danych przez Esysco sp. z o.o. w celu kontaktu i umówienia konsultacji. Administratorem danych jest Esysco sp. z o.o.; szczegóły w <a href="polityka-prywatnosci.html" style="text-decoration:underline">polityce prywatności</a>. *</label>
+        <div style="margin-top:22px"><button class="btn btn--primary" id="k_submit" type="button">Umów konsultację</button></div>
+        <p class="form-msg" id="k_result" style="margin-top:14px"></p>
+      </div>
+      <div>
+        <div class="card" style="padding:28px">
+          <span class="card__kicker">Napisz lub zadzwoń</span>
+          <p style="margin-top:12px;font-size:17px;font-weight:500;color:var(--ink)">contact@allaris.pl</p>
+          <p style="font-size:17px;font-weight:500;color:var(--ink)">+48 61 646 00 47</p>
+          <p class="muted small" style="margin-top:14px">Odbieramy w dni robocze 8:00–17:00. Dla klientów z umową SLA — całodobowa linia wsparcia.</p>
+        </div>
+        <div class="card" style="padding:28px;margin-top:16px">
+          <span class="card__kicker">Biura</span>
+          <p class="muted small" style="margin-top:12px;line-height:1.8"><b style="color:var(--ink)">Poznań</b> — ul. Seweryna Mielżyńskiego 20/5A, 61-725 Poznań (siedziba)<br><b style="color:var(--ink)">Warszawa</b> — Rondo Daszyńskiego 1<br><b style="color:var(--ink)">Berlin</b> — Unter den Linden 21</p>
+        </div>
+        <div class="card" style="padding:28px;margin-top:16px;background:var(--peach);border-color:var(--peach)">
+          <span class="card__kicker" style="color:#5A4A2E">Czego się spodziewać</span>
+          <p class="small" style="margin-top:12px;color:#43361F;line-height:1.7">Godzina rozmowy z inżynierem, nie handlowcem. Wychodzisz z listą priorytetów i realnym planem — niezależnie od tego, czy zdecydujesz się na współpracę.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>window.__ACTIVE_PAGE__="kontakt.html";</script>
+<script src="js/sygnet.js"></script>
+<script src="js/wireframe.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  var b=document.getElementById("k_submit");
+  b.addEventListener("click",function(){
+    var name=document.getElementById("k_name").value.trim();
+    var email=document.getElementById("k_email").value.trim();
+    var consent=document.getElementById("k_consent").checked;
+    var out=document.getElementById("k_result");
+    if(!name){ out.textContent="Podaj imię i nazwisko."; return; }
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ out.textContent="Podaj poprawny adres e-mail."; return; }
+    if(!consent){ out.textContent="Zaznacz zgodę na kontakt — bez niej nie możemy się odezwać."; return; }
+    out.textContent="Dziękujemy! Odezwiemy się w ciągu jednego dnia roboczego, żeby umówić termin.";
+  });
+});
+</script>
+</body>
+</html>

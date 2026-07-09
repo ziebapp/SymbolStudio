@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dostawca — Allaris</title>
+<link rel="icon" type="image/svg+xml" href="assets/sygnet.svg">
+<link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main>
+
+  <section class="hero" id="hero" style="padding-bottom:64px">
+    <div class="container">
+      <div class="crumbs">
+        <a href="index.html">Home</a><span class="sep">/</span>
+        <a href="dostawcy.html">Dostawcy</a><span class="sep">/</span>
+        <span id="crumb-sup">Dostawca</span>
+      </div>
+      <div class="hero__grid">
+        <div>
+          <span class="eyebrow" id="sup-origin">Partner technologiczny</span>
+          <h1 id="sup-name">Dostawca</h1>
+          <p class="lead" style="margin-top:16px" id="sup-desc">Technologia, na której budujemy nasze rozwiązania.</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="kontakt.html">Zapytaj o wdrożenie</a>
+            <a class="btn btn--ghost" href="#rozwiazania-dostawcy">Powiązane rozwiązania</a>
+          </div>
+        </div>
+        <div class="visual visual--hero" aria-hidden="true" style="min-height:380px">
+          <div class="glow"><b id="sup-glow">Partnerstwo technologiczne</b><span>certyfikowani inżynierowie Allaris · wsparcie producenta</span></div>
+          <div class="sygnet-mask"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" id="wspolpraca">
+    <div class="container">
+      <div class="section__head">
+        <span class="kicker">Współpraca</span>
+        <h2 class="section__title">Co daje Ci to partnerstwo</h2>
+      </div>
+      <div class="grid g3">
+        <div class="card">
+          <span class="card__kicker">Kompetencje</span>
+          <h3 class="card__title">Certyfikowani inżynierowie</h3>
+          <p class="muted small" style="margin-top:6px">Nasz zespół przechodzi ścieżki certyfikacyjne producenta i pracuje na jego technologii od lat — wdrażamy sprawdzone wzorce, nie eksperymenty.</p>
+        </div>
+        <div class="card">
+          <span class="card__kicker">Dostęp</span>
+          <h3 class="card__title">Bezpośrednia linia do producenta</h3>
+          <p class="muted small" style="margin-top:6px">W sprawach eskalacji i roadmapy rozmawiamy bezpośrednio z inżynierią dostawcy. Dla Ciebie oznacza to krótszą drogę od problemu do rozwiązania.</p>
+        </div>
+        <div class="card">
+          <span class="card__kicker">Niezależność</span>
+          <h3 class="card__title">Partnerstwo, nie wyłączność</h3>
+          <p class="muted small" style="margin-top:6px">Znamy tę technologię na wylot, ale nie mamy obowiązku jej sprzedawać. Jeśli u Ciebie lepiej zadziała inna — powiemy to wprost.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="rozwiazania-dostawcy">
+    <div class="container">
+      <div class="section__head">
+        <span class="eyebrow">Zastosowania</span>
+        <h2 class="section__title">Rozwiązania oparte o tę technologię</h2>
+      </div>
+      <div class="sol-cards" id="sup-solutions"></div>
+    </div>
+  </section>
+
+  <section class="section closing" id="cta">
+    <div class="sygnet-bg" aria-hidden="true"></div>
+    <div class="container">
+      <div class="closing__inner">
+        <div>
+          <h2>Sprawdźmy, czy to technologia dla Ciebie</h2>
+          <p class="lead">W 60 minut przeanalizujemy Twoją sytuację i powiemy, czy ta technologia rozwiązuje Twój problem — a jeśli nie, wskażemy lepszą.</p>
+        </div>
+        <div class="closing__actions">
+          <a class="btn btn--primary" href="kontakt.html">Umów darmową konsultację</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>window.__ACTIVE_PAGE__="dostawcy.html";</script>
+<script src="js/sygnet.js"></script>
+<script src="js/wireframe.js"></script>
+<script>
+/* Wypełnia stronę danymi dostawcy z ?dostawca=id (źródło: SUPPLIERS) */
+(function(){
+  var MAP = {
+    utimaco:      ["hsm-cloud-hsm","kms","enterprise-encryption","post-quantum-cryptography"],
+    keyfactor:    ["enterprise-pki","clm","machine-iot-security","managed-pki"],
+    nexus:        ["workforce-customer-identity","iam","mfa","machine-iot-security"],
+    cryptomathic: ["remote-signing","qualified-electronic-signatures","eseals","kms"],
+    yubico:       ["mfa","zero-trust","pam","workforce-customer-identity"],
+    thales:       ["encryption","data-security","hsm-cloud-hsm","kms-secrets-management"]
+  };
+  function fill(){
+    var id=new URLSearchParams(location.search).get("dostawca");
+    var sup=(window.SUPPLIERS||[]).filter(function(s){return s.id===id;})[0] || (window.SUPPLIERS||[])[0];
+    if(!sup) return;
+    document.getElementById("sup-name").textContent=sup.name;
+    document.getElementById("sup-desc").textContent=sup.desc;
+    document.getElementById("sup-origin").textContent="Partner technologiczny · "+sup.origin;
+    document.getElementById("crumb-sup").textContent=sup.name;
+    document.getElementById("sup-glow").textContent="Allaris × "+sup.name;
+    document.title=sup.name+" — partner technologiczny | Allaris";
+    var slugs=MAP[sup.id]||[]; var host=document.getElementById("sup-solutions"); var html="";
+    (window.CLUSTERS||[]).forEach(function(c){
+      c.services.forEach(function(s){
+        if(slugs.indexOf(s.slug)>=0){
+          html+='<a class="sol-card" href="'+sol(s.slug)+'">'+
+            '<span class="sol-card__name">'+s.abbr+'</span>'+
+            '<span class="sol-card__desc">'+s.desc+'</span>'+
+            '<span class="sol-card__go">Przejdź do rozwiązania <span aria-hidden="true">→</span></span></a>';
+        }
+      });
+    });
+    host.innerHTML=html;
+  }
+  if(document.readyState!=="loading") fill(); else document.addEventListener("DOMContentLoaded",fill);
+})();
+</script>
+</body>
+</html>
