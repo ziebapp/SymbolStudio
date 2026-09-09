@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIS2 w praktyce: od listy wymogów do planu działania — Allaris</title>
+<meta name="description" content="Jak przełożyć wymogi NIS2 na konkretny plan: kwalifikacja podmiotu, 10 obszarów z art. 21, raportowanie incydentów i harmonogram na pierwsze 90 dni. Bez straszenia karami.">
+<link rel="icon" type="image/svg+xml" href="assets/sygnet.svg">
+<link rel="stylesheet" href="css/wireframe.css">
+</head>
+<body>
+
+<div class="read-bar" data-read-bar aria-hidden="true"></div>
+<div id="site-header"></div>
+
+<main>
+
+  <!-- ================= NAGŁÓWEK ARTYKUŁU ================= -->
+  <article>
+  <header class="art-hero">
+    <div class="container">
+      <div class="crumbs">
+        <a href="index.html">Home</a><span class="sep">/</span>
+        <a href="poradnik.html">Poradnik</a><span class="sep">/</span>
+        <span>NIS2 w praktyce</span>
+      </div>
+
+      <div class="art-hero__grid">
+        <div>
+          <div class="art-hero__meta">
+            <span class="eyebrow" style="margin-bottom:0">Wiedza</span>
+            <span class="art-hero__time">7 min czytania</span>
+            <time class="art-hero__date" datetime="2026-09-02">2 września 2026</time>
+          </div>
+
+          <h1>NIS2 w praktyce: od listy wymogów do planu działania</h1>
+
+          <p class="art-hero__lead">Najtrudniejsze w przygotowaniu do NIS2 nie jest przeczytanie dyrektywy. Jest nim ustalenie, co dotyczy Twojej organizacji, czego brakuje i kto ma się tym zająć. Pokazujemy, jak przejść od wymogów do wykonalnego planu.</p>
+
+          <div class="art-hero__byline">
+            <span class="art-hero__avatar" aria-hidden="true">MZ</span>
+            <div>
+              <div class="art-hero__author">Marta Zielińska</div>
+              <div class="art-hero__role">Compliance &amp; zarządzanie ryzykiem, Allaris</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="visual ph-photo">
+          <span class="visual__label">zdjęcie — warsztat analizy luk</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= ZAJAWKA + TAGI ================= -->
+  <section class="art-abstract">
+    <div class="container">
+      <div class="art-abstract__inner">
+        <blockquote class="art-pull" style="margin:0">
+          Zgodność, która działa, to nie segregator na półce — to procesy, które ktoś naprawdę wykonuje.
+        </blockquote>
+        <div>
+          <p>Jak przełożyć wymogi NIS2 na konkretny plan: kwalifikacja, 10 obszarów z art. 21, analiza luk i priorytety. Bez straszenia karami.</p>
+          <div class="art-tags">
+            <span class="art-tag">NIS2</span>
+            <span class="art-tag">zgodność</span>
+            <span class="art-tag">uKSC</span>
+            <span class="art-tag">zarządzanie ryzykiem</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TREŚĆ ================= -->
+  <section class="container">
+    <div class="art-layout">
+
+      <!-- spis treści -->
+      <aside class="art-toc">
+        <div class="art-toc__label">W tym artykule</div>
+        <nav class="art-toc__list" data-toc>
+          <a class="art-toc__link" href="#kwalifikacja">Czy podlegasz obowiązkom</a>
+          <a class="art-toc__link" href="#obszary">Dziesięć obszarów z art. 21</a>
+          <a class="art-toc__link" href="#raportowanie">Raportowanie incydentów</a>
+          <a class="art-toc__link" href="#plan">Plan na pierwsze 90 dni</a>
+          <a class="art-toc__link" href="#zarzad">Co powinien zobaczyć zarząd</a>
+          <a class="art-toc__link" href="#zrodla">Źródła</a>
+        </nav>
+        <div class="art-toc__foot">
+          <a class="link-arrow" href="kontakt.html">Umów konsultację <span class="a">→</span></a>
+        </div>
+      </aside>
+
+      <!-- kolumna tekstu -->
+      <div class="art-prose">
+
+        <!-- kluczowe wnioski -->
+        <div class="art-key">
+          <div class="sygnet-mask" aria-hidden="true"></div>
+          <div class="art-key__label">W skrócie</div>
+          <ul class="art-key__list">
+            <li><span><b>Kwalifikacja to analiza, nie kod PKD.</b> Liczy się rodzaj realnie świadczonych usług, struktura organizacji i przepisy krajowe.</span></li>
+            <li><span><b>Dziesięć obszarów z art. 21</b> opisz trzema elementami: zabezpieczenie, dowód jego działania, osoba odpowiedzialna.</span></li>
+            <li><span><b>Raportowanie to proces.</b> 24 godziny na wczesne ostrzeżenie, 72 na zgłoszenie — role trzeba ustalić przed incydentem.</span></li>
+            <li><span><b>Efektem pierwszego etapu jest plan,</b> a nie prezentacja o dyrektywie: co poprawiamy, dlaczego, kto odpowiada, jak sprawdzimy.</span></li>
+          </ul>
+        </div>
+
+        <p>NIS2 przenosi cyberbezpieczeństwo z obszaru dobrych praktyk do obszaru obowiązków regulacyjnych dla kolejnych grup organizacji. Nie oznacza to jednak, że każda firma musi wdrożyć taki sam zestaw narzędzi. Środki powinny być odpowiednie i proporcjonalne do ryzyka, skali działalności oraz potencjalnych skutków incydentu.</p>
+
+        <p>Najbardziej użytecznym rezultatem pierwszego etapu przygotowań nie jest obszerna prezentacja o dyrektywie. Jest nim uzgodniony plan: co poprawiamy, dlaczego, kto za to odpowiada i jak sprawdzimy efekt.</p>
+
+        <h2 id="kwalifikacja">Najpierw ustal, czy organizacja podlega obowiązkom</h2>
+
+        <p>NIS2 rozróżnia podmioty kluczowe i ważne. Przy kwalifikacji znaczenie mają rodzaj działalności, wielkość przedsiębiorstwa oraz przewidziane w przepisach wyjątki. Niektóre podmioty mogą podlegać regulacji niezależnie od rozmiaru. Przy ocenie trzeba również uwzględnić odpowiednie zasady dotyczące przedsiębiorstw partnerskich i powiązanych.</p>
+
+        <p>Nie wystarczy więc sprawdzić głównego kodu działalności albo policzyć pracowników jednej spółki. Potrzebna jest analiza rzeczywiście świadczonych usług, struktury organizacji i właściwych przepisów krajowych.</p>
+
+        <div class="art-note">
+          <span class="art-note__label">Częste nieporozumienie</span>
+          Sam fakt dostarczania usług podmiotowi objętemu NIS2 nie oznacza automatycznie, że dostawca również podlega przepisom. Może jednak skutkować dodatkowymi wymaganiami umownymi.
+        </div>
+
+        <h2 id="obszary">Dziesięć obszarów, które trzeba przełożyć na praktykę</h2>
+
+        <p>Artykuł 21 NIS2 wskazuje minimalny katalog środków zarządzania ryzykiem. Obejmuje on:</p>
+
+        <ol class="art-areas">
+          <li>polityki analizy ryzyka i bezpieczeństwa systemów informacyjnych</li>
+          <li>obsługę incydentów</li>
+          <li>ciągłość działania, zarządzanie kopiami zapasowymi, odtwarzanie i zarządzanie kryzysowe</li>
+          <li>bezpieczeństwo łańcucha dostaw</li>
+          <li>bezpieczeństwo nabywania, rozwoju i utrzymania systemów, w tym zarządzanie podatnościami</li>
+          <li>ocenę skuteczności wdrożonych środków</li>
+          <li>podstawowe praktyki cyberhigieny i szkolenia</li>
+          <li>polityki i procedury dotyczące kryptografii oraz, w stosownych przypadkach, szyfrowania</li>
+          <li>bezpieczeństwo personelu, kontrolę dostępu i zarządzanie aktywami</li>
+          <li>stosowanie odpowiednich mechanizmów silnego uwierzytelniania i zabezpieczonej komunikacji</li>
+        </ol>
+
+        <div class="art-note">
+          <span class="art-note__label">Jak z tego zrobić dokument roboczy</span>
+          Każdy obszar warto opisać trzema elementami: istniejące zabezpieczenie, dowód jego działania oraz osoba odpowiedzialna. Polityka kopii zapasowych nie odpowiada jeszcze na pytanie, czy organizacja potrafi odtworzyć usługę.
+        </div>
+
+        <h2 id="raportowanie">Raportowanie incydentów: przygotuj proces, nie tylko formularz</h2>
+
+        <p>Model raportowania NIS2 zakłada wczesne ostrzeżenie w ciągu 24 godzin, zgłoszenie incydentu w ciągu 72 godzin od uzyskania wiedzy o nim oraz raport końcowy w późniejszym etapie. W praktyce szczegóły trzeba odnosić do właściwego podmiotu, przepisów krajowych i obowiązujących kanałów zgłoszeń.</p>
+
+        <div class="art-clock">
+          <div class="art-clock__step">
+            <span class="art-clock__t">24<span class="u">h</span></span>
+            <span class="art-clock__n">Wczesne ostrzeżenie</span>
+            <span class="art-clock__d">Sygnał do właściwego organu, że incydent wystąpił.</span>
+          </div>
+          <div class="art-clock__step">
+            <span class="art-clock__t">72<span class="u">h</span></span>
+            <span class="art-clock__n">Zgłoszenie incydentu</span>
+            <span class="art-clock__d">Liczone od uzyskania wiedzy o incydencie, nie od jego początku.</span>
+          </div>
+          <div class="art-clock__step">
+            <span class="art-clock__t" style="font-size:15px;letter-spacing:0">etap późniejszy</span>
+            <span class="art-clock__n">Raport końcowy</span>
+            <span class="art-clock__d">Termin zależny od przepisów krajowych i rodzaju podmiotu.</span>
+          </div>
+        </div>
+
+        <p>Największym wyzwaniem nie jest samo wysłanie informacji. Jest nim ustalenie, kto rozpoznaje powagę zdarzenia, kto podejmuje decyzję, kto kontaktuje się z właściwym organem i jak organizacja działa poza godzinami pracy. Te role powinny być uzgodnione przed incydentem.</p>
+
+        <h2 id="plan">Plan na pierwsze 90 dni</h2>
+
+        <p class="art-caveat">Poniższy harmonogram jest przykładem organizacji prac, a nie ustawowym terminem ani obietnicą pełnej zgodności w trzy miesiące.</p>
+
+        <div class="art-phase">
+          <div class="art-phase__days">Dni 1–30</div>
+          <div class="art-phase__body">
+            <h3>Zakres i stan obecny</h3>
+            <p>Potwierdź kwalifikację, wyznacz sponsora po stronie kierownictwa i zbierz informacje o usługach, systemach oraz dostawcach. Przejrzyj istniejące polityki, umowy, wyniki audytów i procedury awaryjne. Oddziel rozwiązania rzeczywiście działające od tych, które istnieją wyłącznie w dokumentacji.</p>
+          </div>
+        </div>
+
+        <div class="art-phase">
+          <div class="art-phase__days">Dni 31–60</div>
+          <div class="art-phase__body">
+            <h3>Ryzyko i priorytety</h3>
+            <p>Oceń, które luki najbardziej zagrażają ciągłości usług i bezpieczeństwu danych. Zabezpieczenie kont administratorów albo przetestowanie odtwarzania może mieć większą pilność niż zakup kolejnego systemu raportowego. Priorytety powinny wynikać z ryzyka, obowiązków i realnego wpływu na biznes.</p>
+          </div>
+        </div>
+
+        <div class="art-phase">
+          <div class="art-phase__days">Dni 61–90</div>
+          <div class="art-phase__body">
+            <h3>Realizacja i dowody</h3>
+            <p>Uruchom pierwsze działania, przypisz właścicieli pozostałych zadań i uzgodnij finansowanie. Przeprowadź ćwiczenie obsługi incydentu. Zbuduj rejestr dowodów: protokoły testów, potwierdzenia przeglądów dostępów, wyniki szkoleń i decyzje dotyczące zaakceptowanego ryzyka.</p>
+          </div>
+        </div>
+
+        <h2 id="zarzad">Co powinien zobaczyć zarząd</h2>
+
+        <p>Dobry raport nie musi być długi. Powinien pokazywać:</p>
+
+        <ul class="art-checks">
+          <li>najważniejsze ryzyka</li>
+          <li>zaległe działania</li>
+          <li>potrzebne decyzje</li>
+          <li>postęp względem planu</li>
+        </ul>
+
+        <p>Organ zarządzający ma obowiązki związane z zatwierdzaniem środków i nadzorem nad ich wdrażaniem; jego rola nie powinna ograniczać się do podpisania gotowej polityki.</p>
+
+        <blockquote class="art-pull">
+          Zgodność, która działa, to nie segregator na półce — to procesy, które ktoś naprawdę wykonuje.
+        </blockquote>
+
+        <p>Plan wdrożenia pomaga uporządkować działania, ale sam w sobie nie potwierdza zgodności. Ostatecznie liczy się to, czy środki są adekwatne, działają i są regularnie sprawdzane. W Polsce zakres obowiązków należy odnosić do aktualnego brzmienia ustawy o krajowym systemie cyberbezpieczeństwa oraz przepisów wykonawczych.</p>
+
+        <!-- źródła -->
+        <div class="art-sources" id="zrodla">
+          <div class="art-sources__label">Źródła</div>
+          <ul>
+            <li>Dyrektywa (UE) 2022/2555 — NIS2</li>
+            <li>Ustawa z 23 stycznia 2026 r. o zmianie ustawy o KSC — Dz.U. 2026 poz. 252</li>
+            <li>Ministerstwo Cyfryzacji — najważniejsze terminy KSC 2026</li>
+          </ul>
+        </div>
+
+        <!-- następny artykuł -->
+        <a class="art-next" href="#">
+          <div>
+            <div class="art-next__label">Czytaj dalej</div>
+            <div class="art-next__title">DORA dla instytucji finansowych: co naprawdę trzeba wdrożyć</div>
+          </div>
+          <span class="art-next__go" aria-hidden="true">→</span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+  </article>
+
+  <!-- ================= NEWSLETTER ================= -->
+  <section class="section section--slim" style="padding-top:88px">
+    <div class="container">
+      <div class="newsletter-hero" style="margin-top:0">
+        <div class="sygnet-mask" aria-hidden="true"></div>
+        <div>
+          <h3>Bądź o krok przed NIS2, DORA i eIDAS 2.0</h3>
+          <p>Raz w miesiącu wysyłamy jeden konkretny e-mail: co zmienia się w regulacjach, co to znaczy dla Twojej firmy i co warto zrobić. Czyta go już ponad 2 400 osób z IT, compliance i zarządów.</p>
+        </div>
+        <div>
+          <div class="form-inline" data-newsletter>
+            <input class="input" type="email" placeholder="Twój e-mail służbowy" aria-label="Adres e-mail">
+            <button class="btn btn--primary" type="button">Zapisz się</button>
+          </div>
+          <p class="form-msg" data-news-msg></p>
+          <label class="consent"><input type="checkbox"> Wyrażam zgodę na otrzymywanie od Esysco sp. z o.o. informacji handlowych drogą elektroniczną. Zgodę mogę wycofać w każdej chwili.</label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="section closing" id="cta">
+    <div class="sygnet-bg" aria-hidden="true"></div>
+    <div class="container">
+      <div class="closing__inner">
+        <div>
+          <h2>Nie wiesz, czy NIS2 dotyczy Twojej organizacji?</h2>
+          <p class="lead">Umów bezpłatną konsultację — przejdziemy przez kwalifikację i powiemy wprost, od czego zacząć.</p>
+        </div>
+        <div class="closing__actions">
+          <a class="btn btn--primary" href="kontakt.html">Umów darmową konsultację</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script>window.__ACTIVE_PAGE__="poradnik.html";</script>
+<script src="js/sygnet.js"></script>
+<script src="js/wireframe.js"></script>
+<script>
+/* Pasek postępu czytania + podświetlanie aktywnej sekcji w spisie treści */
+(function(){
+  var bar   = document.querySelector("[data-read-bar]");
+  var links = Array.prototype.slice.call(document.querySelectorAll(".art-toc__link"));
+  var body  = document.querySelector(".art-prose");
+  if(!body) return;
+
+  var targets = links.map(function(a){
+    return document.getElementById(a.getAttribute("href").slice(1));
+  });
+
+  var ticking = false;
+  function update(){
+    ticking = false;
+
+    if(bar){
+      var start = body.offsetTop;
+      var span  = body.offsetHeight - window.innerHeight;
+      var done  = span > 0 ? (window.scrollY - start) / span : 0;
+      bar.style.width = Math.max(0, Math.min(1, done)) * 100 + "%";
+    }
+
+    var line = window.scrollY + 160;
+    var current = -1;
+    for(var i = 0; i < targets.length; i++){
+      if(targets[i] && targets[i].offsetTop <= line) current = i;
+    }
+    links.forEach(function(a, i){ a.classList.toggle("active", i === current); });
+  }
+
+  function onScroll(){
+    if(!ticking){ ticking = true; requestAnimationFrame(update); }
+  }
+
+  window.addEventListener("scroll", onScroll, {passive:true});
+  window.addEventListener("resize", onScroll, {passive:true});
+  update();
+})();
+</script>
+</body>
+</html>
