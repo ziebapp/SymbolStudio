@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+.env
+
+# Ignore the output video from Git but not videos you import into src/.
+out
+
+# Renders and scratch files (keep folder placeholders)
+exports/**
+!exports/.gitkeep
+temp/**
+!temp/.gitkeep
