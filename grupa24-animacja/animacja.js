@@ -65,7 +65,7 @@ const E = {
   out: cubicBezier(0.22, 1, 0.36, 1),   // wejścia elementów
   open: cubicBezier(0.5, 0, 0.15, 1),   // otwieranie ramki
   glide: cubicBezier(0.3, 0, 0.2, 1),
-  suck: cubicBezier(0.75, 0, 0.15, 1),  // „wciągnięcie” wideo w maskę logo
+  fly: cubicBezier(0.72, 0, 0.42, 1),   // ramka wideo nabiera prędkości i z rozpędu wpada w logo
   lin: t => t,
 };
 
@@ -305,8 +305,6 @@ function sampleAnchored(segs) {
 const SHAPES = {};
 function addShape(name, d) { SHAPES[name] = sampleAnchored(parseD(d)[0]); }
 
-addShape('rectFull', `M0 0L${W + 120} 0L${W + 120} ${H + 120}L0 ${H + 120}Z`);
-addShape('rectF3', 'M0 0L1162 0L1162 480L0 480Z');
 addShape('plate', D.grupa.plate);
 addShape('square', D.grupa.square);
 addShape('circle', D.grupa.circle);
@@ -324,35 +322,6 @@ function specPts(spec, out) {
     out[2 * j + 1] = spec.y + p[2 * j + 1] * spec.s;
   }
   return out;
-}
-
-const bufA = new Float64Array(N * 2), bufB = new Float64Array(N * 2);
-function blend(a, b, e, out) {
-  if (e <= 0) return specPts(a, out);
-  if (e >= 1) return specPts(b, out);
-  specPts(a, bufA); specPts(b, bufB);
-  for (let i = 0; i < N * 2; i++) out[i] = bufA[i] + (bufB[i] - bufA[i]) * e;
-  return out;
-}
-
-const resolve = (state, t) => (typeof state === 'function' ? state(t) : state);
-
-// segs: [[t0, t1, fromState, toState, ease]] — stan = lista konturów (spec)
-function morphAt(segs, t, bufs) {
-  let hold = segs[0][2];
-  for (const [t0, t1, from, to, ease, stagger = 0] of segs) {
-    if (t < t0) break;
-    if (t <= t1) {
-      const p = (t - t0) / (t1 - t0), A = resolve(from, t), B = resolve(to, t);
-      const span = 1 - stagger * (A.length - 1);
-      return A.map((a, i) => {
-        const e = (ease || E.io)(Math.max(0, Math.min(1, (p - i * stagger) / span)));
-        return { pts: blend(a, B[i], e, bufs[i]), hole: !!(B[i].hole || a.hole) };
-      });
-    }
-    hold = to;
-  }
-  return resolve(hold, t).map((s, i) => ({ pts: specPts(s, bufs[i]), hole: !!s.hole }));
 }
 
 // otwory rysowane w przeciwnym kierunku → reguła nonzero daje sumę kształtów z otworami
@@ -415,6 +384,21 @@ const markCenter = t => { const [x, y, s] = markPart('plate', t); return [x + 25
 
 /* ----------------------------------------------------------------- tracks */
 
+/*
+ * F3→F4: ramka wideo i obraz skalują się razem (liniowo, bez dopasowania do kształtów).
+ * Ramka przyspiesza; gdy zmaleje do rozmiaru logo, z rozpędu „wpada” w nie —
+ * od tej chwili maską są kształty logo, a obraz dalej hamuje w tej samej skali.
+ */
+const FLY = [5.75, 6.95];
+const FLY_END_S = 0.30;          // skala obrazu w logo
+const HIT_S = 0.36;              // skala ramki, przy której wpada w logo
+const FLY_HIT = (() => {         // moment uderzenia wyliczony z krzywej ruchu
+  const target = (0.66 - HIT_S) / (0.66 - FLY_END_S);
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (E.fly(m) < target) lo = m; else hi = m; }
+  return FLY[0] + (FLY[1] - FLY[0]) * lo;
+})();
+
 const T = {
   // apla pod GRUPA. F4: wideo, F5–F7: światła, F8–F10: aktywna część w kolorze marki, reszta w masce wideo
   plateFill: seq(C.black, [10.6, 11.2, C.grey], [14.6, 15.3, C.kramat], [19.9, 19.91, C.black, E.lin]),
@@ -435,9 +419,9 @@ const T = {
 
   // wideo: skala i środek; vidFollow = jak mocno wideo trzyma się znaku
   vidOp: seq(1, [8.3, 8.8, 0], [14.2, 15.0, 1], [21.0, 21.4, 0]),
-  vidS: seq(1, [3.6, 5.0, 0.66], [5.75, 6.75, 0.32, E.suck]),
+  vidS: seq(1, [3.6, 5.0, 0.66], [FLY[0], FLY[1], FLY_END_S, E.fly]),
   vidC: seq([CX, CY], [3.6, 5.0, [923, 464]]),
-  vidFollow: seq(0, [5.75, 6.75, 1, E.suck]),
+  vidFollow: seq(0, [FLY[0], FLY[1], 1, E.fly]),
 
   // linie konstrukcyjne
   bandP: seq(0, [2.1, 3.3, 1, E.out], [5.9, 6.5, 0]),
@@ -452,10 +436,6 @@ const T = {
   olOp: seq(1, [6.3, 6.9, 0]),
   olCol: [255, 255, 255, 0.9],
 
-  // wielkie kształty F8–F11: cienki obrys w kolorze marki
-  bigDraw: seq(0, [14.4, 16.0, 1, E.io]),
-  bigOp: seq(0, [14.39, 14.4, 1, E.lin], [20.8, 21.9, 0]),
-  bigCol: seq(C.kramat, [16.5, 17.7, C.msway], [18.3, 19.5, C.hitec]),
 
   camera: seq(0, [0, DURATION, 1, E.lin]),
   fade: seq(1, [0, 1.0, 0, E.out], [27.2, 28, 1]),
@@ -484,40 +464,24 @@ const CAPLINES = [457.02, 489.52];
 
 /* ------------------------------------------------------- shape states (clip) */
 
-const PT = p => ({ point: p });
 const partSpec = (part, shape) => t => { const [x, y, s] = markPart(part, t); return { shape, x, y, s }; };
 const plateSpec = partSpec('plate', 'plate'), squareSpec = partSpec('square', 'square'), circleSpec = partSpec('circle', 'circle');
 
 const frame = (L, x, y, s) => [{ shape: L + '_outer', x, y, s }, { shape: L + '_inner', x, y, s, hole: true }];
-const K_C = [743, 392.518], H_C = [790.544, 417.324];
 
-// maska wideo: zawsze 3 kontury (suma kształtów)
-const rectF3 = { shape: 'rectF3', x: 342, y: 224, s: 1 };
-const S_full = [{ shape: 'rectFull', x: -60, y: -60, s: 1 }, PT([923, 464]), PT([923, 464])];
-const S_rect = [rectF3, rectF3, rectF3];
-const S_mask = t => [plateSpec(t), squareSpec(t), circleSpec(t)];   // wideo w masce logo
-const WAKE = 5.75;   // moment, w którym obrysy są gotowe i logo „wciąga” wideo
-const CLIP = [
-  [3.6, 5.0, S_full, S_rect],
-  // na ostro: kształty logo stają się jedną maską, a wideo (nie maska) skaluje się do środka
-  [WAKE, WAKE + 0.001, S_rect, S_mask, E.lin],
-];
+// maska logo: apla + kwadrat + koło jako jeden kształt
+const S_mask = t => [plateSpec(t), squareSpec(t), circleSpec(t)];
 
-// F8–F11: wielkie kształty jako cienki obrys, przejścia przez morf obrysu (biały środek)
-const B_K0 = (() => {
-  const s = 0.45, o = { shape: 'K_outer', x: CX - K_C[0] * s, y: 464.52 - K_C[1] * s, s };
-  return [o, { ...o }];
-})();
-const B_K = frame('K', 177, 72, 1);
-const B_M = frame('M', 122, -12, 1);
-const B_H = frame('H', 130, 47, 1);
-const B_Hcover = frame('H', 920.544 - H_C[0] * 3, 464.324 - H_C[1] * 3, 3);
+/*
+ * F8–F11: wielkie kształty bez morfingu. Każdy rysuje się po ścieżce (trim path)
+ * w docelowej skali, potem znika tak samo, a w jego miejsce rysuje się następny.
+ * head = koniec rysowanego odcinka, tail = początek (0→1 przy znikaniu).
+ */
 const BIG = [
-  [14.4, 16.0, B_K0, B_K, E.open],
-  [16.5, 17.7, B_K, B_M],
-  [18.3, 19.5, B_M, B_H],
-  [20.2, 22.2, B_H, B_Hcover],
-];
+  { L: 'K', x: 177, y: 72, color: C.kramat, head: [14.4, 15.6], tail: [16.3, 17.1] },
+  { L: 'M', x: 122, y: -12, color: C.msway, head: [16.6, 17.8], tail: [18.1, 18.9] },
+  { L: 'H', x: 130, y: 47, color: C.hitec, head: [18.4, 19.6], tail: [20.3, 21.1] },
+].map(b => ({ ...b, headK: seq(0, [...b.head, 1, E.io]), tailK: seq(0, [...b.tail, 1, E.io]) }));
 
 /* --------------------------------------------------------------- brands */
 
@@ -613,7 +577,10 @@ const band = [el('line', {}, gLines), el('line', {}, gLines)];
 const vlines = VLINES.map(() => el('line', {}, gLines));
 const caplines = CAPLINES.map(() => el('line', {}, gLines));
 [...band, ...vlines, ...caplines].forEach(l => { l.setAttribute('vector-effect', 'non-scaling-stroke'); stroked(l, 1); });
-const bigLines = [0, 1].map(() => stroked(el('path', strokeAttrs(drawAttrs), gLines), STROKE));
+const bigNodes = BIG.map(b => frame(b.L, b.x, b.y, 1).map(spec => stroked(el('path', {
+  d: contoursD([{ pts: specPts(spec, new Float64Array(N * 2)), hole: false }]),
+  stroke: rgb(b.color), ...strokeAttrs({ pathLength: 1 }),
+}, gLines), STROKE)));
 
 const M = {
   plate: boxPart(G.plate, gMark),
@@ -666,7 +633,7 @@ const setPart = (node, part, t, dy = 0) => {
   const [x, y, s] = markPart(part, t);
   node.setAttribute('transform', tf(x, y + dy, s));
 };
-const clipBufs = makeBufs(3), bigBufs = makeBufs(2);
+const clipBufs = makeBufs(3);
 let fitScale = 1;
 
 function updateSygnet(n, K, t) {
@@ -722,7 +689,13 @@ function render(t) {
     const c = mix(at(T.vidC, t), markCenter(t), at(T.vidFollow, t));
     const drift = 28 - 56 * (t / DURATION);   // ciężarówka powoli „jedzie” w górę-lewo
     vinner.style.transform = `translate(${c[0].toFixed(2)}px,${c[1].toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-CX + drift).toFixed(2)}px,${(-CY + drift / 2).toFixed(2)}px)`;
-    vlayer.style.clipPath = `path('${contoursD(morphAt(CLIP, t, clipBufs))}')`;
+    if (t < FLY_HIT) {
+      // ramka = dokładne granice obrazu
+      const x0 = c[0] + (-CX + drift) * s, y0 = c[1] + (-CY + drift / 2) * s;
+      vlayer.style.clipPath = `path('M${x0.toFixed(1)} ${y0.toFixed(1)}H${(x0 + W * s).toFixed(1)}V${(y0 + H * s).toFixed(1)}H${x0.toFixed(1)}Z')`;
+    } else {
+      vlayer.style.clipPath = `path('${contoursD(S_mask(t).map((spec, i) => ({ pts: specPts(spec, clipBufs[i]), hole: false })))}')`;
+    }
   }
 
   /* linie konstrukcyjne */
@@ -748,18 +721,15 @@ function render(t) {
     l.setAttribute('stroke', lc); l.style.display = cp > 0.001 ? '' : 'none';
   });
 
-  /* F8–F11: wielkie kształty — cienki obrys, morf przez obrys */
-  const bOp = at(T.bigOp, t);
-  if (bOp > 0.001) {
-    const list = morphAt(BIG, t, bigBufs), col = rgb(at(T.bigCol, t)), d = at(T.bigDraw, t).toFixed(4);
-    bigLines.forEach((l, i) => {
-      l.style.display = '';
-      l.setAttribute('d', contoursD([{ pts: list[i].pts, hole: false }]));
-      l.setAttribute('stroke', col);
-      l.setAttribute('stroke-dasharray', `${d} 2`);
-      l.setAttribute('opacity', op(bOp));
-    });
-  } else bigLines.forEach(l => { l.style.display = 'none'; });
+  /* F8–F11: wielkie kształty — rysowanie i znikanie po ścieżce */
+  BIG.forEach((b, i) => {
+    const head = at(b.headK, t), tail = at(b.tailK, t), len = head - tail;
+    for (const l of bigNodes[i]) {
+      l.style.display = len > 0.0005 ? '' : 'none';
+      l.setAttribute('stroke-dasharray', `${len.toFixed(4)} 2`);
+      l.setAttribute('stroke-dashoffset', (-tail).toFixed(4));
+    }
+  });
 
   /* GRUPA 24: tła i obrysy */
   const olOp = at(T.olOp, t);
