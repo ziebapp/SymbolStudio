@@ -81,6 +81,8 @@ Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfiel
 ## D. Reveal wg Figmy — `out/reveal.mp4` (12,3 s, 16:9, 60 fps)
 
 Źródło: Figma `5om0DyfMnKFfTDrbqGwGy2`, node `1:57`. Zdjęcie: `img/photo.jpg`, złożone ze screenshotów Figmy (narożniki domalowane). Do podmiany na oryginał.
+Footage: `img/plate.jpg` (droga bez ciężarówki) + `img/truck.png` (ciężarówka jedzie po moście, 38 px/s) + powolny dryf jak z drona. Docelowo do podmiany na wideo z Higgsfielda (H1).
+Proporcje: kompozycja z siatką w 70% skali z Figmy, lockup w 80%, logo marek 64 px wysokości. Na siatce są opisy techniczne (GRID 13×13, numer formy, specyfikacja), a komórki z elementami zmieniającymi się między formami (ścięcia, promienie, kropki) są podświetlone. Listę komórek liczy `G24.formProbe`.
 Ruch jest ciągły, bez holdów: każda faza startuje, zanim skończy się poprzednia, a easing to cubic in-out z krótkimi ogonami. Kamera przez cały czas powoli dojeżdża (+5%).
 
 | # | Czas | Kadr |
