@@ -2,43 +2,52 @@
 
 Prototyp działa na oryginalnych ścieżkach z SVG (`svg/`). Podgląd na żywo: otwórz `index.html` w przeglądarce (scrub + wybór sceny). Render: `node render.js <scena>` → `out/<scena>.mp4`.
 
-> **Brakuje:** SVG logo GROUP 24 (wordmark + sygnet). Sygnet w prototypie jest zastępczy (prostokąt / ćwiartka / koło) — po podmianie pliku wpinam prawdziwy.
-
 ---
+
+## Zasada nadrzędna: ciągłość
+Nic nie pojawia się znikąd i nic nie znika w pustkę. Każdy element **wychodzi z poprzedniego**:
+punkt → linia → sygnet → (kwadrat wyciąga) GROUP 24 → sygnet wypuszcza marki → pole „24” rozszerza się w następną scenę → gradient zapada się z powrotem w ■.
+Montaż jest „wewnętrzny”: zamiast cięć – match-cuty na elementach znaku. Kamera cały czas oddycha (push-in 3–5% na holdach, powrót na przejściach), żeby nie było martwych klatek.
 
 ## Zasady ruchu (gramatyka)
 
 | Reguła | Wartość |
 |---|---|
-| Easing ruchu | expo-out (szybki start, twarde osadzenie) — wejścia; quint-in-out — przeloty i morfy |
-| „24” | buduje się segment po segmencie L→P, każdy segment z 1-klatkowym mignięciem (wyświetlacz); znika P→L |
-| Nazwa marki | litery wjeżdżają od dołu spod linii maski, stagger 0,09; wyjazd w górę |
-| Znaczniki narożne | jedyny element, który **przechodzi** między markami — morf kształtu (kropka ↔ prostokąt ↔ ćwiartka) + pozycji |
-| Hasło | pisane mono z kursorem ▌, kasowane wstecz |
-| Siatka konstrukcyjna | 1 px, 35% krycia, rysuje się przed logo, znika przed holdem |
-| Przejście tła | nigdy przenikanie (gradienty brudzą się na brąz) — pas otwierający się od osi logo lub twardy wipe ze scan-line |
-| Hold końcowy | min. 1,2 s nieruchomego logo |
+| Easing | expo-out na wejściach, quint-in-out na przelotach i morfach; kamera smoothstep |
+| Render | 60 fps + motion blur (3 subklatki uśrednione) |
+| „24” | segmenty rysują się **jeden z drugiego** (nakładające się wipe'y, jak pociągnięcie pióra) – poziome L→P, pionowe G→D |
+| Nazwa marki | litery wyjeżdżają spod linii maski, stagger 0,09 |
+| GROUP 24 | jest **wyciągany z kwadratu ■** (maska po lewej krawędzi kwadratu), hasło LEADING ALL THE WAY **z koła ●** |
+| Znaczniki narożne | jedyny element, który przechodzi między scenami – morf kształtu (● ↔ ■ ↔ ◗/▛) + pozycji |
+| Przejście między markami | pole „24” obecnej marki rośnie do pełnego ekranu w gradiencie następnej; znaczniki jadą na jego narożnikach do rogów ekranu i wracają jako nowe logo |
+| Hold | ~1 s z push-in kamery; finał 1,5 s |
 
 ---
 
-## A. Film systemowy — `out/film.mp4` (15 s, 16:9)
+## A. Film systemowy — `out/film.mp4` (15,2 s, 16:9, 60 fps)
 
-| # | Czas | Kadr | Ruch |
+| # | Czas | Kadr / ruch | Z czego wychodzi |
 |---|---|---|---|
-| A1 | 0,0–1,1 | Jasne tło `#E4E8E9`, centrum: sygnet ■ ◗ ● | Kształty wskakują po kolei (scale z zera, expo-out, co 0,12 s) |
-| A2 | 1,1–2,0 | Sygnet rozpada się na 3 rzędy | ■ → 6 prostokątów KRAMAT, ◗ → 6 ćwiartek MS WAY, ● → 6 kropek HI-TEC. Rzędy wyrównane do prawej (jak na planszy systemu) |
-| A3 | 1,5–3,2 | 3 logotypy budują się **równocześnie** | Siatka konstrukcyjna z etykietami (033, I—8, 025, 8—7) → „24” segmentami → nazwy od dołu. Stagger między rzędami 0,1 s — równa waga marek |
-| A4 | 3,2–4,3 | Hold trzech marek | Siatka gaśnie |
-| A5 | 4,3–5,3 | Scalenie | KRAMAT i MS WAY gaszą nazwy/24, ich znaczniki zjeżdżają i morfują w kropki HI-TEC; HI-TEC jedzie do centrum i rośnie. Od osi logo otwiera się pas z gradientem teal, logo przechodzi w biel |
-| A6 | 5,3–7,0 | HI-TEC 24 + „IN THE RIGHT TEMPERATURE.” | Hasło pisane |
-| A7 | 7,0–8,0 | HI-TEC → KRAMAT | Wipe L→P z białą scan-line; kropki morfują w prostokąty i przesuwają się na szerokość KRAMAT; HI-TEC wyjeżdża w górę, 24 gaśnie segmentami, KRAMAT wjeżdża |
-| A8 | 8,0–9,2 | KRAMAT 24 + „IN THE RIGHT HANDS.” | Hold |
-| A9 | 9,2–10,2 | KRAMAT → MS WAY | jw., prostokąty → ćwiartki |
-| A10 | 10,2–11,4 | MS WAY 24 + „IN THE RIGHT TIME.” | Hold |
-| A11 | 11,4–12,6 | Powrót do grupy | Nazwa i 24 gasną; pary znaczników L/Ś/P zbiegają się w ■ ◗ ●; pas zamyka się do linii, tło jasne, logo czarne |
-| A12 | 12,6–15,0 | Sygnet + „LEADING ALL THE WAY.” | Hasło pisane, hold |
+| A1 | 0,00–0,28 | Punkt w centrum | — |
+| A2 | 0,18–0,58 | Punkt rozciąga się w linię długości sygnetu | z punktu |
+| A3 | 0,58–1,25 | Linia dzieli się na 3 odcinki, które pęcznieją w ■ ▛ ●; zostaje włosowa linia, która ucieka do krawędzi ekranu | z linii |
+| A4 | 1,25–2,15 | Sygnet przesuwa się w prawo na pozycję lockupu; **kwadrat wyciąga GROUP 24**, koło wyciąga LEADING ALL THE WAY. | z kwadratu / koła |
+| A5 | 2,15–2,75 | Hold lockupu grupy (push-in) | |
+| A6 | 2,75–3,35 | GROUP chowa się z powrotem w kwadrat, sygnet wraca do centrum | |
+| A7 | 3,25–4,10 | ■ → 6 znaczników KRAMAT, ▛ → 6 znaczników MS WAY, ● → 6 znaczników HI-TEC (3 rzędy) | z kształtów sygnetu |
+| A8 | 3,60–4,90 | Siatka konstrukcyjna, „24” rysowane piórem, nazwy od dołu – 3 marki naraz | ze znaczników |
+| A9 | 4,90–5,45 | Hold trzech marek | |
+| A10 | 5,45–6,85 | Pole „24” HI-TEC rośnie do pełnego ekranu (teal), przykrywa resztę; kropki jadą do rogów ekranu i wracają jako duże HI-TEC 24 + hasło | z pola „24” |
+| A11 | 6,85–7,65 | Hold HI-TEC | |
+| A12 | 7,65–9,05 | Pole „24” HI-TEC → pełny ekran KRAMAT; kropki morfują w prostokąty w drodze do rogów | z pola „24” |
+| A13 | 9,05–9,85 | Hold KRAMAT | |
+| A14 | 9,85–11,25 | → MS WAY (prostokąty → ćwiartki) | z pola „24” |
+| A15 | 11,25–12,05 | Hold MS WAY | |
+| A16 | 12,05–13,10 | Nazwa i 24 wychodzą; **zielony ekran zapada się w kwadrat ■** (kolor → czerń); pary znaczników składają się w ▛ i ● | gradient → ■ |
+| A17 | 13,05–13,95 | Kwadrat znów wyciąga GROUP 24, koło – hasło | z kwadratu / koła |
+| A18 | 13,95–15,20 | Hold finałowy lockupu grupy | |
 
-Kolejność marek w cyklu (HI-TEC → KRAMAT → MS WAY) to jedna zmienna — do akceptacji przez klienta (pierwsza = wygląda na wiodącą).
+Kolejność marek to jedna zmienna w kodzie – do akceptacji przez klienta.
 
 ## B. Stingi marek — `out/sting-*.mp4` (3,4 s, wersja jasna i kolorowa)
 
@@ -47,7 +56,7 @@ Kolejność marek w cyklu (HI-TEC → KRAMAT → MS WAY) to jedna zmienna — do
 | B1 | 0,00–0,35 | Duży kształt marki (×4) w centrum, expo-out |
 | B2 | 0,35–0,95 | Kształt mnoży się na 6 znaczników i rozjeżdża w narożniki (stagger 0,025) |
 | B3 | 0,45–1,15 | Siatka konstrukcyjna |
-| B4 | 0,80–1,35 | „24” segmentami |
+| B4 | 0,80–1,35 | „24” rysowane piórem (segment z segmentu) |
 | B5 | 1,05–1,70 | Nazwa od dołu |
 | B6 | 1,65–2,25 | Hasło pisane; siatka gaśnie 1,9–2,3 |
 | B7 | 2,25–3,40 | Hold |
@@ -56,18 +65,18 @@ Sting marki zaczyna się od **jej** kształtu, nie od historii grupy — klient 
 
 ## C. Hero film z footage (15–20 s) — do złożenia w AE/Premiere
 
-Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfield. Przejścia footage ↔ footage używają **tego samego** wipe'u ze scan-line co w A7/A9, więc film i logo mówią jednym językiem.
+Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfield. Przejścia footage ↔ footage używają **tego samego** mechanizmu co A10–A14: pole „24” rośnie do pełnego ekranu, a w jego wnętrzu jest już kolejne ujęcie (maska zamiast gradientu). Film i logo mówią jednym językiem.
 
 | # | Czas | Kadr |
 |---|---|---|
 | C1 | 0–3 | A1–A3 skrócone (sygnet → 3 marki) na jasnym tle |
 | C2 | 3–4 | Ramka „24” HI-TEC (narożne kropki) powiększa się na cały ekran — wnętrze ramki to już footage H1 |
 | C3 | 4–8 | **H1** + logo HI-TEC 24 białe, lewy dół, hasło |
-| C4 | 8–9 | Wipe ze scan-line → **H2**, znaczniki morfują w prostokąty, logo KRAMAT |
+| C4 | 8–9 | Pole „24” rośnie → wewnątrz **H2**, znaczniki morfują w prostokąty, logo KRAMAT |
 | C5 | 9–13 | **H2** + KRAMAT 24 |
-| C6 | 13–14 | Wipe → **H3**, logo MS WAY |
+| C6 | 13–14 | Pole „24” rośnie → **H3**, logo MS WAY |
 | C7 | 14–17 | **H3** + MS WAY 24 |
-| C8 | 17–20 | Ramka zamyka się do linii → A11–A12 (sygnet + LEADING ALL THE WAY.) |
+| C8 | 17–20 | Ujęcie zapada się w kwadrat ■ → A16–A18 (GROUP 24 wyciągany z kwadratu) |
 
 ---
 
@@ -108,7 +117,6 @@ Kamera: *Crane up*.
 ---
 
 ## Do zrobienia
-- [ ] SVG GROUP 24 → podmiana sygnetu + wordmark GROUP w A1/A12
 - [ ] Font hasła (teraz zastępczy mono) — podaj krój z brandbooka
 - [ ] Akceptacja kolejności marek
 - [ ] Wersje 9:16 i 1:1 (layout trio → pionowy stos)
