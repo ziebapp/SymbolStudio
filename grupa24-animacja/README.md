@@ -8,14 +8,14 @@ Gotowy render jest w pliku `grupa24-animacja.mp4` (1840×928, 60 fps, 28 s).
 
 ## Plan animacji (każdy ruch wynika z poprzedniego)
 
-Przez całą animację kamera bardzo powoli najeżdża na scenę i lekko „oddycha”, a kolejne ruchy na siebie zachodzą, więc obraz nigdy nie stoi. Części znaku ruszają kaskadowo (apla → 2 → 4 → hasło), litery wjeżdżają po kolei. Wszystkie obrysy konstrukcyjne sygnetów mają stałe 2 px.
+Przez całą animację kamera bardzo powoli najeżdża na scenę i lekko „oddycha”, a kolejne ruchy na siebie zachodzą, więc obraz nigdy nie stoi. Apla, 2 i 4 jadą razem jako jedna maska, hasło lekko się spóźnia, a litery wjeżdżają po kolei. Wszystkie obrysy konstrukcyjne sygnetów mają stałe 2 px.
 
 | # | czas | co się dzieje |
 |---|------|---------------|
 | 1 | 0–1.9 s | Ciężarówka jedzie. Napisy GRUPA · 24 · hasło rysują się szeroko na wideo. |
 | 2–3 | 1.9–4.6 s | Jeden ciągły przejazd: elementy schodzą się do środka, rozciąga się pas konstrukcyjny, a hasło odpala pionowe linie. Wideo skaluje się do środka. |
 | 3 | 4.6–5.8 s | Po liniach rysują się obrysy emblematów: ścięta apla, kwadrat i koło. |
-| 4 | 5.3–7.8 s | Wideo zjeżdża kolejno do apli, kwadratu i koła i jedzie dalej w masce logo. Znak odjeżdża w lewo, a pola 2 i 4 gasną do czerni. Wideo zostaje w apli pod GRUPA. |
+| 4 | 5.75–7.8 s | Na ostro: kształty logo (apla, kwadrat, koło) stają się jedną maską, a samo wideo zmniejsza się do skali logo, jakby maska je wciągnęła. Wideo jedzie dalej w masce logo. Znak odjeżdża w lewo, a pola 2 i 4 gasną do czerni. Wideo zostaje w apli pod GRUPA. |
 | 5 | 8.3–10.3 s | Wideo w apli gaśnie do czerni, apla „się zapala”. Obok wjeżdża typografia KRAMAT, pojawia się „24”, sygnet rysuje się obrysem i wypełnia kolorem. |
 | 6–7 | 10.6–13.8 s | Zapala się kolejno „2”, potem „4”, jak światła na skrzyżowaniu. „24” zostaje w miejscu i zmienia kolor. Poprzedni sygnet przybliża się i szybko gaśnie, a na jego miejsce wjeżdża następny (obrys, potem kolor) razem z typografią. |
 | 8–10 | 13.8–19.5 s | Logo wraca na środek. Wokół niego rysuje się cienki obrys wielkiego sygnetu KRAMAT, który morfuje przez obrys w MS WAY i HI-TEC. Środek jest biały, a logo GRUPA jest maską wideo. Aktywna część przejmuje kolor marki, od której pochodzi: apla jest pomarańczowa, „2” zielone, „4” turkusowe. |

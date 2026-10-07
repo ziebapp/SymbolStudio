@@ -65,6 +65,7 @@ const E = {
   out: cubicBezier(0.22, 1, 0.36, 1),   // wejścia elementów
   open: cubicBezier(0.5, 0, 0.15, 1),   // otwieranie ramki
   glide: cubicBezier(0.3, 0, 0.2, 1),
+  suck: cubicBezier(0.75, 0, 0.15, 1),  // „wciągnięcie” wideo w maskę logo
   lin: t => t,
 };
 
@@ -404,8 +405,8 @@ const MOVES = [
   [13.9, L5], [15.2, L8],
   [21.8, L8], [23.0, L12],
 ];
-// części znaku ruszają kaskadowo (apla → 2 → 4 → hasło), co daje organiczny, „żywy” ruch
-const LAG = { plate: 0, letters: 0, square: 0.06, d2: 0.06, circle: 0.12, d4: 0.12, tagline: 0.18 };
+// apla, 2 i 4 to jedna maska — jadą razem; hasło lekko się spóźnia, co ożywia ruch
+const LAG = { plate: 0, letters: 0, square: 0, d2: 0, circle: 0, d4: 0, tagline: 0.12 };
 const POS = {};
 for (const part of Object.keys(L1)) POS[part] = path(MOVES.map(([t, L, pass]) => [t + LAG[part], L[part], pass]));
 const markPart = (part, t) => pathAt(POS[part], t);
@@ -429,14 +430,14 @@ const T = {
   circOp: seq(0, [6.9, 7.5, 1], [14.4, 15.0, 0], [18.4, 19.1, 1]),
   d4Fill: seq(C.white, [18.4, 19.1, C.ink], [20.4, 21.0, C.white]),
   // hasło
-  tagFill: seq(C.white, [5.5, 6.1, C.ink]),
+  tagFill: seq(C.white, [5.75, 5.95, C.ink]),
   tagOp: seq(1, [6.6, 7.1, 0], [14.59, 14.6, 1, E.lin]),
 
   // wideo: skala i środek; vidFollow = jak mocno wideo trzyma się znaku
   vidOp: seq(1, [8.3, 8.8, 0], [14.2, 15.0, 1], [21.0, 21.4, 0]),
-  vidS: seq(1, [3.6, 5.0, 0.66], [5.4, 6.6, 0.38]),
+  vidS: seq(1, [3.6, 5.0, 0.66], [5.75, 6.75, 0.32, E.suck]),
   vidC: seq([CX, CY], [3.6, 5.0, [923, 464]]),
-  vidFollow: seq(0, [5.4, 6.6, 1]),
+  vidFollow: seq(0, [5.75, 6.75, 1, E.suck]),
 
   // linie konstrukcyjne
   bandP: seq(0, [2.1, 3.3, 1, E.out], [5.9, 6.5, 0]),
@@ -448,7 +449,7 @@ const T = {
   olPlate: seq(0, [4.6, 5.6, 1, E.io]),
   olSquare: seq(0, [4.8, 5.6, 1, E.io]),
   olCircle: seq(0, [4.95, 5.75, 1, E.io]),
-  olOp: seq(1, [6.2, 6.8, 0]),
+  olOp: seq(1, [6.3, 6.9, 0]),
   olCol: [255, 255, 255, 0.9],
 
   // wielkie kształty F8–F11: cienki obrys w kolorze marki
@@ -495,9 +496,11 @@ const rectF3 = { shape: 'rectF3', x: 342, y: 224, s: 1 };
 const S_full = [{ shape: 'rectFull', x: -60, y: -60, s: 1 }, PT([923, 464]), PT([923, 464])];
 const S_rect = [rectF3, rectF3, rectF3];
 const S_mask = t => [plateSpec(t), squareSpec(t), circleSpec(t)];   // wideo w masce logo
+const WAKE = 5.75;   // moment, w którym obrysy są gotowe i logo „wciąga” wideo
 const CLIP = [
   [3.6, 5.0, S_full, S_rect],
-  [5.3, 6.7, S_rect, S_mask, E.io, 0.1],   // wideo zjeżdża kolejno do apli, kwadratu i koła, potem zostaje w masce logo
+  // na ostro: kształty logo stają się jedną maską, a wideo (nie maska) skaluje się do środka
+  [WAKE, WAKE + 0.001, S_rect, S_mask, E.lin],
 ];
 
 // F8–F11: wielkie kształty jako cienki obrys, przejścia przez morf obrysu (biały środek)
