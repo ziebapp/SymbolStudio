@@ -404,24 +404,25 @@
   }
 
   // =====================================================================
-  // SCENE: reveal — GROUP 24 system presentation. Light, hairline, continuous.
-  //  1 group      three companies (● HI-TEC, ■ KRAMAT, ▛ MS WAY) slide together into the signet
-  //  2 logo       the GROUP 24 lockup is pulled out of the signet
-  //  3 constant   the "24" steps forward onto a hairline construction grid
-  //  4 evolution  a scanline redraws the 24 in each brand's dialect; markers re-shape; details light up
-  //  5 behaviour  the page contracts into each brand's white shape with footage around it; logo black, 24 in brand colour
-  //  6 finale     the page opens again, the 24 becomes the group 24, markers fold into ■ ▛ ●, full lockup
+  // SCENE: reveal — GROUP 24 system presentation
+  //  1 GROUP 24 rises in on white; the signet shapes ■ ▛ ● fly in and dock
+  //  2 everything is pulled into the ■: it widens into a strip (pushing GROUP out), the footage opens inside,
+  //    and it grows straight to the full frame; a hairline grid draws, the 24 settles into it
+  //  3 evolution: the 24 morphs (shape morph, not a mask) through HI-TEC → KRAMAT → MS WAY; markers re-shape
+  //  4 brands: white outline shapes ● ■ ▛ appear left → right across the full width, white logos inside
+  //  5 finale: the outlines fold into the white group signet, GROUP 24 is pulled out, the three full brand
+  //    logos settle in a row under it
   // Brand order everywhere: HI-TEC → KRAMAT → MS WAY.
   // =====================================================================
-  const PH = { a: 0.15, join: 1.8, pull: 2.6, ink: 3.5, step: 4.15, grid: 4.55, f1: 5.85, f2: 6.95, f3: 8.05, f4: 9.15, b0: 10.0, b1: 12.2, b2: 14.2, fin: 16.3, end: 20.0 };
-  const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-  const NAME24 = { hitec: 'HI-TEC 24', kramat: 'KRAMAT 24', msway: 'MS WAY 24' };
+  const PH = { in: 0.15, fly: 0.7, pull: 1.75, strip: 2.35, full: 2.95, grid: 3.5, f1: 4.7, f2: 5.8, f3: 6.9, brands: 8.0, fin: 11.4, end: 14.6 };
   const flow = x => (x < 0.5 ? 4 * x ** 3 : 1 - Math.pow(-2 * x + 2, 3) / 2); // cubic in-out: short tails, chains without stalls
-  const INKC = '#0a0a0a';
-  const ACCENT = { hitec: '#2FA597', kramat: '#E0561E', msway: '#4CA563' };
+  const INKC = '#0a0a0a', WH = '#fff';
+  const ACCENT = { hitec: '#5FE0D0', kramat: '#FF7A3D', msway: '#8FE58A' };
   const SIG_OF = { kramat: 0, msway: 1, hitec: 2 };
+  const NAME24 = { hitec: 'HI-TEC 24', kramat: 'KRAMAT 24', msway: 'MS WAY 24' };
+  const TAG2 = { hitec: ['IN THE RIGHT', 'TEMPERATURE.'], kramat: ['IN THE RIGHT', 'HANDS.'], msway: ['IN THE RIGHT', 'TIME.'] };
 
-  // group lockup (Figma position, scaled to 80 % around the frame centre)
+  // ---------- group lockup (Figma position, 80 % around the frame centre) ----------
   const LS = 0.8;
   const lx = x => 960 + (x - 960) * LS, ly = y => 540 + (y - 540) * LS;
   const lRect = r => ({ ...r, x: lx(r.x), y: ly(r.y), w: r.w * LS, h: r.h * LS, r: r.r.map(v => v * LS) });
@@ -430,12 +431,19 @@
     { x: 1122.91, y: 501.98, w: 81.78, h: 77.81, r: [35.19, 0, 0, 0], notch: 1 },
     { x: 1210.87, y: 499.92, w: 81.46, h: 81.46, r: [40.73, 40.73, 40.73, 40.73] },
   ].map(lRect);
-  const LOCK = `translate(${f(lx(251))} ${f(ly(405))}) scale(${LS})`; // group24.svg → screen
-  const D24 = { x: 543.47, y: 101.83, w: 167.96, h: 69.82 };         // thin 24 inside group24.svg
+  const MERGED = lRect({ x: 1013, y: 503, w: 153, h: 77, r: [0, 0, 0, 0] });
+  const TUCK = [null, lRect({ x: 1021.78, y: 510.34, w: 64.22, h: 61.1, r: [27.6, 0, 0, 0], notch: 1 }),
+                      lRect({ x: 1033, y: 512, w: 57, h: 57, r: [28.5, 28.5, 28.5, 28.5] })];
+  const STRIP = lRect({ x: 461, y: 471, w: 705, h: 141, r: [0, 0, 0, 0] });
+  const FULLG = { x: -30, y: -30, w: W + 60, h: H + 60, r: [0, 0, 0, 0] };
+  const lockT = dy => `translate(${f(lx(251))} ${f(ly(405) + dy)}) scale(${LS})`;   // group24.svg → screen
+  const D24 = { x: 543.47, y: 101.83, w: 167.96, h: 69.82 };                         // thin 24 inside group24.svg
   const LK24 = { x: lx(251) + D24.x * LS, y: ly(405) + D24.y * LS, w: D24.w * LS, h: D24.h * LS };
-  const TAG_R = lx(251) + 1373.9 * LS, GROUP_L = lx(251) + 43.38 * LS;
+  const GROUP_L = lx(251) + 43.38 * LS, TAG_R = lx(251) + 1373.9 * LS;
+  const FIN_DY = -70;                                                                 // final lockup sits a little higher
+  const shiftY = (g, dy) => ({ ...g, y: g.y + dy });
 
-  // construction grid: 13 × 13 cells; the 24 is two 5 × 5 digits with one cell between
+  // ---------- construction grid: 13 × 13 cells; the 24 is two 5 × 5 digits, one cell apart ----------
   const CELL = 46;
   const GRID = { x: W / 2 - 6.5 * CELL, y: H / 2 - 6.5 * CELL, s: 13 * CELL, n: 13 };
   const BOX = { x: GRID.x + CELL, y: GRID.y + 4 * CELL, w: 11 * CELL, h: 5 * CELL };
@@ -447,152 +455,215 @@
   const paths = (qs, color) => qs.map(q => `<path d="${q.d}"${q.stroke ? ` stroke="${color}" stroke-width="${q.stroke}"` : ''}/>`).join('');
   const thin24 = (box, color, op = 1) => op <= 0 ? '' : `<g opacity="${f(op)}" transform="translate(${f(box.x - D24.x * box.w / D24.w)} ${f(box.y - D24.y * box.h / D24.h)}) scale(${(box.w / D24.w).toFixed(5)} ${(box.h / D24.h).toFixed(5)})" fill="${color}">${GRP.d24.map(d => `<path d="${d}"/>`).join('')}</g>`;
   const brand24 = (key, T, color, op = 1) => op <= 0 ? '' : `<g opacity="${f(op)}" transform="translate(${f(T.tx)} ${f(T.ty)}) scale(${T.s.toFixed(5)})" fill="${color}">${paths(BRANDS[key].digits, color)}</g>`;
-  const form24 = (form, box, color) => form === 'thin' ? thin24(box, color) : brand24(form, fitT(BRANDS[form].dbb, box), color);
   const scaleAbout = (g, k) => { const cx = g.x + g.w / 2, cy = g.y + g.h / 2;
     return { ...g, x: cx - g.w * k / 2, y: cy - g.h * k / 2, w: g.w * k, h: g.h * k, r: g.r.map(v => v * k) }; };
-  const sigAt = (key, cx, cy, h) => { const g = LK[SIG_OF[key]], s = h / g.h;
-    return { x: cx - g.w * s / 2, y: cy - h / 2, w: g.w * s, h, r: g.r.map(v => v * s), notch: g.notch || 0 }; };
+
+  // ---------- shape morph of the 24 (flubber): every form is sampled into rings in a unit box ----------
+  // UBOX = 11 × 5 cells of 100 units; forms: thin (group), hitec, kramat, msway. Pieces are matched per digit
+  // by nearest centroid; a piece that maps to several splits (separate), several that map to one merge (combine).
+  const UBOX = { x: 0, y: 0, w: 1100, h: 500 };
+  const FORMS = ['thin', 'hitec', 'kramat', 'msway'];
+  const MORPH = { rings: {}, interp: {} };
+  function sampleRing(d, map) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('d', d); MORPH.host.appendChild(el);
+    const L = el.getTotalLength(), n = Math.max(40, Math.round(L / 3)), ring = [];
+    for (let i = 0; i < n; i++) { const p = el.getPointAtLength(L * i / n); ring.push(map(p.x, p.y)); }
+    el.remove();
+    return ring;
+  }
+  const centroid = r => r.reduce((a, p) => [a[0] + p[0] / r.length, a[1] + p[1] / r.length], [0, 0]);
+  function buildMorph() {
+    MORPH.host = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    MORPH.host.style.cssText = 'position:absolute;left:-9999px;top:0;width:10px;height:10px';
+    document.body.appendChild(MORPH.host);
+    for (const form of FORMS) {
+      let rings;
+      if (form === 'thin') {
+        const sx = UBOX.w / D24.w, sy = UBOX.h / D24.h;
+        rings = GRP.d24.map(d => sampleRing(d, (x, y) => [(x - D24.x) * sx, (y - D24.y) * sy]));
+      } else {
+        const T = fitT(BRANDS[form].dbb, UBOX);
+        rings = BRANDS[form].digits.map(q => sampleRing(q.d, (x, y) => [x * T.s + T.tx, y * T.s + T.ty]));
+      }
+      MORPH.rings[form] = [rings.filter(r => centroid(r)[0] < UBOX.w / 2), rings.filter(r => centroid(r)[0] >= UBOX.w / 2)];
+    }
+    MORPH.host.remove();
+  }
+  const speck = r => { const c = centroid(r); return [[c[0] - 1, c[1] - 1], [c[0] + 1, c[1] - 1], [c[0] + 1, c[1] + 1], [c[0] - 1, c[1] + 1]]; };
+  function morphDigit(A, B) {
+    const opt = { maxSegmentLength: 8, single: true }, out = [];
+    const near = (r, set) => { const c = centroid(r); let bi = 0, bd = 1e18;
+      set.forEach((s, i) => { const d = centroid(s); const dd = (d[0] - c[0]) ** 2 + (d[1] - c[1]) ** 2; if (dd < bd) { bd = dd; bi = i; } }); return bi; };
+    if (A.length <= B.length) {
+      const groups = A.map(() => []); B.forEach(b => groups[near(b, A)].push(b));
+      groups.forEach((g, i) => {
+        if (!g.length) out.push(flubber.interpolate(A[i], speck(A[i]), opt));
+        else if (g.length === 1) out.push(flubber.interpolate(A[i], g[0], opt));
+        else out.push(flubber.separate(A[i], g, opt));
+      });
+    } else {
+      const groups = B.map(() => []); A.forEach(a => groups[near(a, B)].push(a));
+      groups.forEach((g, i) => {
+        if (!g.length) out.push(flubber.interpolate(speck(B[i]), B[i], opt));
+        else if (g.length === 1) out.push(flubber.interpolate(g[0], B[i], opt));
+        else out.push(flubber.combine(g, B[i], opt));
+      });
+    }
+    return p => out.map(fn => fn(p)).join(' ');
+  }
+  function morphFn(a, b) {
+    const k = a + '>' + b;
+    if (!MORPH.interp[k]) { const d = [0, 1].map(i => morphDigit(MORPH.rings[a][i], MORPH.rings[b][i])); MORPH.interp[k] = p => d[0](p) + ' ' + d[1](p); }
+    return MORPH.interp[k];
+  }
+  const ringPath = form => MORPH.rings[form].flat().map(r => flubber.toPathString(r)).join(' ');
+  // draw the unit-box 24 with transform {k, tx, ty}
+  const uT = (T, d, color, op = 1) => op <= 0 ? '' : `<path transform="translate(${f(T.tx)} ${f(T.ty)}) scale(${T.k.toFixed(5)})" d="${d}" fill="${color}" opacity="${f(op)}"/>`;
+  const boxT = box => ({ k: box.w / UBOX.w, tx: box.x, ty: box.y });
+  const lerpK = (a, b, p) => ({ k: lerp(a.k, b.k, p), tx: lerp(a.tx, b.tx, p), ty: lerp(a.ty, b.ty, p) });
+  // unit box → where a brand logo (layout L) has its digits
+  const logoDigitsT = (key, L) => { const U = fitT(BRANDS[key].dbb, UBOX), k = L.s / U.s; return { k, tx: L.ox - U.tx * k, ty: L.oy - U.ty * k }; };
 
   function defs() {
     let o = '<defs>';
     for (const k of ORDER) o += `<linearGradient id="ag_${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${BRANDS[k].grad[0]}"/><stop offset="1" stop-color="${BRANDS[k].grad[1]}"/></linearGradient>`;
     return o + '</defs>';
   }
-  const mono = (x, y, txt, op, anchor = 'start', size = 13) => op <= 0 ? '' :
-    `<text x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" fill="${INKC}" opacity="${f(op)}" font-family="DejaVu Sans Mono, monospace" font-size="${size}" letter-spacing="2">${txt}</text>`;
-  // text that rises in from below a mask line and leaves upward
-  function rise(x, y, inner, pin, pout, h = 40) {
+  const mono = (x, y, txt, op, anchor = 'start', size = 13, color = WH) => op <= 0 ? '' :
+    `<text x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" fill="${color}" opacity="${f(op)}" font-family="DejaVu Sans Mono, monospace" font-size="${size}" letter-spacing="2">${txt}</text>`;
+  // content rising in from below a mask line, leaving upward
+  function rise(x, y, inner, pin, pout, h = 40, w = 1600) {
     if (pin <= 0 || pout >= 1) return '';
     const id = 'r' + (clipId++), dy = (1 - ease.out(pin)) * h - flow(pout) * h;
-    return `<clipPath id="${id}"><rect x="${f(x - 600)}" y="${f(y - h)}" width="1200" height="${f(h + 12)}"/></clipPath><g clip-path="url(#${id})"><g transform="translate(0 ${f(dy)})">${inner}</g></g>`;
+    return `<clipPath id="${id}"><rect x="${f(x - w / 2)}" y="${f(y - h)}" width="${w}" height="${f(h + 14)}"/></clipPath><g clip-path="url(#${id})"><g transform="translate(0 ${f(dy)})">${inner}</g></g>`;
+  }
+  // outline of a signet-style shape (rounded corners + optional ▛ notch) as one closed path
+  function outline(g) {
+    const { x, y, w, h } = g; if (w < 0.5 || h < 0.5) return '';
+    const m = Math.min(w, h), [tl, tr, br, bl] = g.r.map(v => clamp(v, 0, m / 2));
+    const n = seg(g.notch || 0, 0.6, 1), nx = x + w * (1 - 0.564 * n), ny = y + h * (1 - 0.541 * n);
+    let d = `M${f(x + tl)} ${f(y)}H${f(x + w - tr)}` + (tr ? `A${f(tr)} ${f(tr)} 0 0 1 ${f(x + w)} ${f(y + tr)}` : '');
+    if (n > 0.001) d += `V${f(ny)}H${f(nx)}V${f(y + h)}`;
+    else d += `V${f(y + h - br)}` + (br ? `A${f(br)} ${f(br)} 0 0 1 ${f(x + w - br)} ${f(y + h)}` : '');
+    d += `H${f(x + bl)}` + (bl ? `A${f(bl)} ${f(bl)} 0 0 1 ${f(x)} ${f(y + h - bl)}` : '') + `V${f(y + tl)}` + (tl ? `A${f(tl)} ${f(tl)} 0 0 1 ${f(x + tl)} ${f(y)}` : '') + 'Z';
+    return d;
   }
 
-  // ---------- 1 + 2: three companies → signet → GROUP 24 ----------
-  const ROWX = key => W / 2 + (ORDER.indexOf(key) - 1) * 400, ROWY = 500, ROWH = 110;
-  function actGroup(t) {
+  // ---------- footage: clean plate + the truck on the deck, framed tight, slow drone push, darkened ----------
+  const TRUCK = { x: 866, y: 578, w: 311, h: 151, dir: [0.9496, -0.3134], v: 34 };
+  function footage(t) {
+    const tr = TRUCK.v * (t - 7), s = 1.6 * (1 + 0.05 * t / PH.end);
+    return `<g transform="translate(960 540) scale(${s.toFixed(5)}) translate(-880 -600)">` +
+      `<image href="img/plate.jpg" x="0" y="0" width="1920" height="1441" preserveAspectRatio="none"/>` +
+      `<image href="img/truck.png" x="${f(TRUCK.x - TRUCK.dir[0] * tr)}" y="${f(TRUCK.y - TRUCK.dir[1] * tr)}" width="${TRUCK.w}" height="${TRUCK.h}"/></g>` +
+      `<rect x="-40" y="-40" width="${W + 80}" height="${H + 80}" fill="#000" opacity="0.28"/>`;
+  }
+
+  // ---------- 1 + 2: GROUP 24 → shapes dock → pulled into the ■ → strip → full frame ----------
+  function actOpen(t) {
     let o = '';
-    const pOut = seg(t, PH.join - 0.1, PH.join + 0.4);
-    // hairline connecting the three companies
-    const pl = ease.out(seg(t, PH.a + 0.8, PH.a + 1.5)) * (1 - flow(seg(t, PH.join, PH.join + 0.6)));
-    if (pl > 0) { const x0 = ROWX('hitec'), x1 = ROWX('msway'), c = (x0 + x1) / 2;
-      o += `<line x1="${f(c - (c - x0) * pl)}" x2="${f(c + (x1 - c) * pl)}" y1="${ROWY}" y2="${ROWY}" stroke="${INKC}" stroke-opacity="0.25" stroke-width="1"/>`; }
-    o += mono(W / 2, ROWY + 200, '3 COMPANIES — 1 GROUP', 0.55 * seg(t, PH.a + 1.0, PH.a + 1.4) * (1 - pOut), 'middle');
-    // the three shapes, then the join into the signet (HI-TEC crosses underneath on an arc)
-    const ink = flow(seg(t, PH.ink, PH.ink + 0.5)), gone = t >= PH.step;
-    ORDER.forEach((key, i) => {
-      const k = ease.out(seg(t, PH.a + i * 0.12, PH.a + 0.75 + i * 0.12));
-      const p = flow(seg(t, PH.join + i * 0.06, PH.join + 0.95 + i * 0.06));
-      const arc = [120, -40, -70][i] * Math.sin(Math.PI * p);
-      let g = lerpGeom(scaleAbout(sigAt(key, ROWX(key), ROWY, ROWH), k), LK[SIG_OF[key]], p);
-      g = { ...g, y: g.y + arc };
-      // in act 3 the signet steps back: shapes shrink away
-      const q = 1 - flow(seg(t, PH.step + i * 0.06, PH.step + 0.5 + i * 0.06));
-      if (q < 1) g = scaleAbout(g, q);
-      if (k <= 0 || q <= 0) return;
-      o += shape(g, ` fill="url(#ag_${key})"`) + (ink > 0 ? shape(g, ` fill="${INKC}" opacity="${f(ink)}"`) : '');
-      // labels under each company
-      const lab = `<text x="${f(ROWX(key))}" y="${ROWY + ROWH / 2 + 52}" text-anchor="middle" fill="${INKC}" font-family="Inter" font-size="18" letter-spacing="4">${NAME24[key]}</text>`;
-      o += rise(ROWX(key), ROWY + ROWH / 2 + 52, lab, seg(t, PH.a + 0.3 + i * 0.12, PH.a + 0.9 + i * 0.12), seg(t, PH.join - 0.15 + i * 0.04, PH.join + 0.3 + i * 0.04), 30);
-      o += mono(ROWX(key), ROWY - ROWH / 2 - 30, `0${i + 1}`, 0.5 * seg(t, PH.a + 0.4 + i * 0.12, PH.a + 0.9 + i * 0.12) * (1 - pOut), 'middle', 12);
+    const pm = flow(seg(t, PH.pull, PH.pull + 0.7));          // ▛ ● tuck into the widening ■
+    const pB = flow(seg(t, PH.strip, PH.strip + 0.75));       // ■ → strip
+    const pF = flow(seg(t, PH.full, PH.full + 0.85));         // strip → full frame
+    const kq = ease.out(seg(t, PH.fly, PH.fly + 0.75));     // ■ drops in from above
+    let g = lerpGeom({ ...LK[0], y: LK[0].y - 260 }, LK[0], kq);
+    g = lerpGeom(g, MERGED, pm);
+    g = lerpGeom(g, STRIP, pB);
+    g = lerpGeom(g, FULLG, pF);
+    // the strip pushes GROUP out to the left; the 24 is swallowed by the strip
+    const X24 = LK24.x, x24 = Math.min(X24, g.x + 41 * LS);
+    const gx = (x24 - X24) * 1.229 - 900 * pF;
+    const band = `<clipPath id="band"><rect x="-600" y="${f(ly(405) + 80 * LS)}" width="${W + 1200}" height="${f(110 * LS)}"/></clipPath>`;
+    const pIn = ease.out(seg(t, PH.in, PH.in + 0.7)), pIn24 = ease.out(seg(t, PH.in + 0.12, PH.in + 0.82));
+    o += band;
+    if (pF < 1) o += `<g clip-path="url(#band)"><g transform="translate(${f(gx)} ${f((1 - pIn) * 90)}) ${lockT(0)}" fill="${INKC}">${GRP.grp.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
+    const small24 = { x: x24, y: LK24.y + (1 - pIn24) * 90, w: LK24.w, h: LK24.h };
+    if (pF < 1) o += `<g clip-path="url(#band)">${thin24(small24, INKC)}</g>`;
+    // the ■ (black), footage opening inside it
+    const pFoot = seg(t, PH.strip + 0.15, PH.strip + 0.6);
+    o += `<clipPath id="win"><path d="${rr(g)}"/></clipPath>`;
+    if (kq > 0) o += shape(g, ` fill="${INKC}"`);
+    if (pFoot > 0) o += `<g clip-path="url(#win)" opacity="${f(pFoot)}">${footage(t)}</g>`;
+    // shapes fly in (■ from above, ▛ from below, ● from the right) and dock; then ▛ ● tuck into the ■
+    [1, 2].forEach(i => {
+      const k = ease.out(seg(t, PH.fly + i * 0.12, PH.fly + 0.75 + i * 0.12));
+      if (k <= 0) return;
+      const from = i === 1 ? { ...LK[1], y: LK[1].y + 260 } : { ...LK[2], x: LK[2].x + 520 };
+      let s = lerpGeom(from, LK[i], k);
+      const p = flow(seg(t, PH.pull + (i - 1) * 0.08, PH.pull + 0.6 + (i - 1) * 0.08));
+      s = lerpGeom(s, TUCK[i], p);
+      const q = 1 - flow(seg(t, PH.strip, PH.strip + 0.4));
+      if (q > 0) o += shape(scaleAbout(s, q), ` fill="${rgb(mixC(INK, [180, 180, 180], seg(p, 0.35, 1)))}"`);
     });
-    // GROUP 24 pulled out of the ■ (clipped left of it), tagline out of the ● (clipped right of it); in act 3 they retract
-    // act 3: GROUP and the tagline leave upward under a mask band, so the 24 stays alone
-    const up = -110 * flow(seg(t, PH.step - 0.05, PH.step + 0.45)), upT = -110 * flow(seg(t, PH.step + 0.05, PH.step + 0.55));
-    const pG = flow(seg(t, PH.pull, PH.pull + 0.8)), pT = flow(seg(t, PH.pull + 0.1, PH.pull + 0.9));
-    const sq = LK[0], ci = LK[2];
-    o += `<clipPath id="band"><rect x="-400" y="${f(ly(405) + 80 * LS)}" width="${W + 800}" height="${f(110 * LS)}"/></clipPath>`;
-    if (pG > 0 && up > -110) {
-      const push = (sq.x - GROUP_L) * (1 - pG);
-      o += `<g clip-path="url(#band)"><clipPath id="og"><rect x="-400" y="0" width="${f(sq.x + 400)}" height="${H}"/></clipPath><g clip-path="url(#og)"><g transform="translate(${f(push)} ${f(up)}) ${LOCK}" fill="${INKC}">${GRP.grp.map(d => `<path d="${d}"/>`).join('')}</g></g></g>`;
-    }
-    if (pT > 0 && upT > -110) {
-      const push = (TAG_R - (ci.x + ci.w)) * (1 - pT);
-      o += `<g clip-path="url(#band)"><clipPath id="ot"><rect x="${f(ci.x + ci.w)}" y="0" width="${W}" height="${H}"/></clipPath><g clip-path="url(#ot)"><g transform="translate(${f(-push)} ${f(upT)}) ${LOCK}" fill="${INKC}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g></g></g>`;
-    }
-    // the thin 24 travels with GROUP out of the ■, then (act 3) steps forward on its own
-    const pS = flow(seg(t, PH.step + 0.35, PH.step + 1.4));
-    const p24 = flow(seg(t, PH.pull, PH.pull + 0.8));
-    if (p24 > 0 && t < PH.f1) {
-      const push = (sq.x - GROUP_L) * (1 - p24);
-      const b = lerpBox({ ...LK24, x: LK24.x + push }, BOX, pS);
-      o += pS > 0 ? thin24(b, INKC) : `<clipPath id="o24"><rect x="-400" y="0" width="${f(sq.x + 400)}" height="${H}"/></clipPath><g clip-path="url(#o24)">${thin24(b, INKC)}</g>`;
-    }
+    // the 24 inside the strip turns white, then settles onto the grid
+    const pS = flow(seg(t, PH.full + 0.2, PH.full + 1.2));
+    const b24 = lerpBox(small24, BOX, pS);
+    if (t < PH.f1) o += `<g clip-path="url(#win)">${uT(boxT(b24), ringPath('thin'), WH)}</g>`;
     return o;
   }
 
-  // ---------- 3 + 4: the constant on the grid, then its evolution ----------
-  const FORMS = ['thin', 'hitec', 'kramat', 'msway', 'hitec']; // ends on HI-TEC, which opens the brand run
+  // ---------- 3: grid + evolution (shape morph) ----------
+  const TFS = () => [PH.f1, PH.f2, PH.f3];
   const FORM_LABEL = { thin: ['GROUP 24', 'STROKE', 1], hitec: ['HI-TEC 24', 'ROUND + DOTS', 2], kramat: ['KRAMAT 24', 'CHAMFER 45°', 3], msway: ['MS WAY 24', 'RADIUS ½ CELL', 4] };
-  const SHAPE_ICON = { hitec: 2, kramat: 0, msway: 1 };
-  // measured with G24.formProbe: cells the form only partly fills
   const HL = {
     kramat: [[5, 4], [11, 6], [1, 8]],
     msway: [[4, 4], [11, 5], [1, 6], [5, 6], [7, 6], [11, 6], [1, 8]],
     hitec: [[0, 2], [12, 2], [1, 4], [4, 4], [7, 4], [11, 4], [5, 5], [11, 5], [1, 6], [5, 6], [7, 6], [10, 6], [11, 7], [1, 8], [5, 8], [11, 8], [0, 10], [12, 10]],
   };
-  const TFS = () => [PH.f1, PH.f2, PH.f3, PH.f4];
-  const formAt = t => TFS().filter(x => t >= x + 0.35).length;   // index of the form the labels describe
-  // grid markers: 4 corner cells (cols 0 / 12, rows 2 / 10), shaped like each brand's markers
   const markerR = (form, right, top) => {
     const R = CELL / 2;
     if (form === 'hitec') return [R, R, R, R];
     if (form === 'kramat') return [0, 0, 0, 0];
     const Q = CELL; return top ? (right ? [0, Q, 0, 0] : [Q, 0, 0, 0]) : (right ? [0, 0, Q, 0] : [0, 0, 0, Q]);
   };
-  function gridMarkers(t, extraT) {
-    const TF = TFS();
-    const k = ease.out(seg(t, TF[0] + 0.3, TF[0] + 0.75));
+  function gridMarkers(t) {
+    const TF = TFS(), k = ease.out(seg(t, TF[0] + 0.35, TF[0] + 0.8));
     if (k <= 0) return [];
     const out = [];
     for (const right of [false, true]) for (const top of [true, false]) {
       let r = markerR('hitec', right, top);
-      [1, 2, 3].forEach(i => { const p = flow(seg(t, TF[i] + 0.15, TF[i] + 0.65)); const nr = markerR(FORMS[i + 1], right, top); r = r.map((v, j) => lerp(v, nr[j], p)); });
-      const g = scaleAbout({ x: GRID.x + (right ? 12 : 0) * CELL, y: GRID.y + (top ? 2 : 10) * CELL, w: CELL, h: CELL, r }, k);
-      out.push({ right, top, g });
+      [1, 2].forEach(i => { const p = flow(seg(t, TF[i], TF[i] + 0.8)); const nr = markerR(FORMS[i + 1], right, top); r = r.map((v, j) => lerp(v, nr[j], p)); });
+      out.push({ right, top, g: scaleAbout({ x: GRID.x + (right ? 12 : 0) * CELL, y: GRID.y + (top ? 2 : 10) * CELL, w: CELL, h: CELL, r }, k) });
     }
     return out;
   }
   function gridLines(p, alpha) {
     if (p <= 0 || alpha <= 0) return '';
-    let o = `<g stroke="${INKC}" stroke-width="1" opacity="${f(0.13 * alpha)}">`;
+    let o = `<g stroke="${WH}" stroke-width="1" opacity="${f(0.3 * alpha)}">`;
     for (let i = 0; i <= GRID.n; i++) {
       const v = GRID.x + i * CELL, q = ease.out(clamp(p * 1.6 - i * 0.045)), q2 = ease.out(clamp(p * 1.6 - 0.1 - i * 0.045));
       if (q > 0) o += `<line x1="${f(GRID.x)}" y1="${f(GRID.y + i * CELL)}" x2="${f(GRID.x + GRID.s * q)}" y2="${f(GRID.y + i * CELL)}"/>`;
       if (q2 > 0) o += `<line x1="${f(v)}" y1="${f(GRID.y)}" x2="${f(v)}" y2="${f(GRID.y + GRID.s * q2)}"/>`;
     }
     o += '</g>';
-    // corner ticks
     const a = alpha * ease.out(p), x0 = GRID.x, y0 = GRID.y, x1 = GRID.x + GRID.s, y1 = GRID.y + GRID.s, k = 9;
-    o += `<g stroke="${INKC}" stroke-width="1" opacity="${f(0.5 * a)}">`;
+    o += `<g stroke="${WH}" stroke-width="1" opacity="${f(0.8 * a)}">`;
     for (const [x, y] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]]) o += `<line x1="${f(x - k)}" y1="${f(y)}" x2="${f(x + k)}" y2="${f(y)}"/><line x1="${f(x)}" y1="${f(y - k)}" x2="${f(x)}" y2="${f(y + k)}"/>`;
     return o + '</g>';
   }
   function gridLabels(t, alpha) {
     if (alpha <= 0) return '';
-    const x0 = GRID.x, y0 = GRID.y, x1 = GRID.x + GRID.s, y1 = GRID.y + GRID.s;
-    let o = mono(x0, y0 - 18, 'GRID 13×13', 0.5 * alpha);
-    // form name / spec / number roll through small windows at each scan
-    const TF = [-9, ...TFS()];
+    const x0 = GRID.x, y0 = GRID.y, x1 = GRID.x + GRID.s, y1 = GRID.y + GRID.s, TF = [-9, ...TFS()];
+    let o = mono(x0, y0 - 18, 'GRID 13×13', 0.7 * alpha);
     FORMS.forEach((form, i) => {
       const [name, spec, num] = FORM_LABEL[form];
       const pin = i === 0 ? 1 : seg(t, TF[i] + 0.3, TF[i] + 0.7), pout = i === FORMS.length - 1 ? 0 : seg(t, TF[i + 1] + 0.1, TF[i + 1] + 0.45);
-      const icon = SHAPE_ICON[form] !== undefined ? (() => { const g = sigAt(form, x1 - 6, y0 - 22, 11); return shape(g, ` fill="${ACCENT[form]}"`); })() : '';
-      o += rise(x1, y0 - 18, mono(x1 - (icon ? 18 : 0), y0 - 18, name, 0.7 * alpha, 'end') + icon, pin, pout, 22);
-      o += rise(x1, y1 + 30, mono(x1, y1 + 30, spec, 0.5 * alpha, 'end'), pin, pout, 22);
-      o += rise(x0, y1 + 30, mono(x0, y1 + 30, `FORM 0${num} / 04`, 0.5 * alpha), pin, pout, 22);
+      o += rise(x1, y0 - 18, mono(x1, y0 - 18, name, 0.85 * alpha, 'end'), pin, pout, 22);
+      o += rise(x1, y1 + 30, mono(x1, y1 + 30, spec, 0.7 * alpha, 'end'), pin, pout, 22);
+      o += rise(x0, y1 + 30, mono(x0, y1 + 30, `FORM 0${num} / 04`, 0.7 * alpha), pin, pout, 22);
     });
     return o;
   }
-  // side caption: brand name + claim, swapping with each form
   function caption(t, alpha) {
     if (alpha <= 0) return '';
     const x = GRID.x + GRID.s + 90, TF = [-9, ...TFS()];
     let o = '';
     FORMS.forEach((form, i) => {
       const name = form === 'thin' ? 'GROUP 24' : NAME24[form], sub = form === 'thin' ? ['LEADING ALL', 'THE WAY.'] : TAG2[form];
-      const pin = i === 0 ? seg(t, PH.grid + 0.3, PH.grid + 0.9) : seg(t, TF[i] + 0.25, TF[i] + 0.85), pout = i === FORMS.length - 1 ? 0 : seg(t, TF[i + 1], TF[i + 1] + 0.4);
-      o += rise(x, 532, `<text x="${x}" y="532" fill="${INKC}" opacity="${f(alpha)}" font-family="Inter" font-size="28" letter-spacing="2">${name}</text>`, pin, pout, 40);
-      sub.forEach((line, j) => { o += rise(x, 566 + j * 20, mono(x, 566 + j * 20, line, 0.55 * alpha, 'start', 13), seg(pin, 0.15 + j * 0.1, 1), pout, 20); });
+      const pin = i === 0 ? seg(t, PH.grid + 0.4, PH.grid + 1.0) : seg(t, TF[i] + 0.25, TF[i] + 0.85), pout = i === FORMS.length - 1 ? 0 : seg(t, TF[i + 1], TF[i + 1] + 0.4);
+      o += rise(x, 532, `<text x="${x}" y="532" fill="${WH}" opacity="${f(alpha)}" font-family="Inter" font-size="28" letter-spacing="2">${name}</text>`, pin, pout, 40, 900);
+      sub.forEach((line, j) => { o += rise(x, 568 + j * 20, mono(x, 568 + j * 20, line, 0.75 * alpha, 'start', 13), seg(pin, 0.15 + j * 0.1, 1), pout, 20, 900); });
     });
     return o;
   }
@@ -600,158 +671,115 @@
     let o = '';
     const TF = TFS();
     TF.forEach((x, i) => {
-      const form = FORMS[i + 1], end = TF[i + 1] !== undefined ? TF[i + 1] : PH.b0;
+      const form = FORMS[i + 1], end = TF[i + 1] !== undefined ? TF[i + 1] : PH.brands;
       (HL[form] || []).forEach(([c, r], j) => {
-        const a = alpha * ease.out(seg(t, x + 0.5 + j * 0.015, x + 0.8 + j * 0.015)) * (1 - seg(t, end, end + 0.3));
+        const a = alpha * ease.out(seg(t, x + 0.6 + j * 0.015, x + 0.9 + j * 0.015)) * (1 - seg(t, end, end + 0.3));
         if (a <= 0) return;
-        o += `<rect x="${f(GRID.x + c * CELL)}" y="${f(GRID.y + r * CELL)}" width="${CELL}" height="${CELL}" fill="${ACCENT[form]}" fill-opacity="${f(0.14 * a)}" stroke="${ACCENT[form]}" stroke-opacity="${f(0.9 * a)}" stroke-width="1.5"/>`;
+        o += `<rect x="${f(GRID.x + c * CELL)}" y="${f(GRID.y + r * CELL)}" width="${CELL}" height="${CELL}" fill="${ACCENT[form]}" fill-opacity="${f(0.16 * a)}" stroke="${ACCENT[form]}" stroke-opacity="${f(0.95 * a)}" stroke-width="1.5"/>`;
       });
     });
     return o;
   }
-  // the 24 on the grid; at each step a scanline redraws it top → bottom in the next dialect
+  // the 24 on the grid, morphing form → form
   function gridDigits(t) {
-    const TF = TFS();
-    const started = TF.filter(x => t >= x).length;
-    const cur = FORMS[started], prev = FORMS[Math.max(0, started - 1)];
-    const sp = started ? flow(seg(t, TF[started - 1], TF[started - 1] + 0.7)) : 1;
-    if (sp >= 1) return form24(cur, BOX, INKC);
-    const y = BOX.y - 8 + (BOX.h + 16) * sp, id = 'sc' + (clipId++);
-    let o = `<clipPath id="${id}a"><rect x="0" y="0" width="${W}" height="${f(y)}"/></clipPath><clipPath id="${id}b"><rect x="0" y="${f(y)}" width="${W}" height="${H}"/></clipPath>`;
-    o += `<g clip-path="url(#${id}a)">${form24(cur, BOX, INKC)}</g><g clip-path="url(#${id}b)">${form24(prev, BOX, INKC)}</g>`;
-    o += `<line x1="${f(GRID.x - 14)}" x2="${f(GRID.x + GRID.s + 14)}" y1="${f(y)}" y2="${f(y)}" stroke="${ACCENT[cur]}" stroke-width="1.5" opacity="${f(Math.sin(Math.PI * sp))}"/>`;
+    const TF = TFS(), started = TF.filter(x => t >= x).length;
+    if (!started) return uT(boxT(BOX), ringPath('thin'), WH);
+    const p = flow(seg(t, TF[started - 1], TF[started - 1] + 0.8));
+    return uT(boxT(BOX), morphFn(FORMS[started - 1], FORMS[started])(p), WH);
+  }
+  function actGrid(t) {
+    const alpha = 1 - seg(t, PH.brands, PH.brands + 0.5);
+    let o = gridLines(seg(t, PH.grid, PH.grid + 1.0), alpha) + highlights(t, alpha) + gridLabels(t, alpha * ease.out(seg(t, PH.grid + 0.4, PH.grid + 1.0))) + caption(t, alpha);
+    if (t >= PH.f1 && t < PH.brands) o += gridDigits(t);
+    if (t < PH.brands) o += gridMarkers(t).map(m => shape(m.g, ` fill="${WH}"`)).join('');
     return o;
   }
 
-  // ---------- 5 + 6: the page becomes the brand's white shape with footage around it; then back into the group ----------
-  const K = 0.5523;                                   // cubic handle length for a quarter circle
-  const C0 = { dx: 0, dy: 0, k: 0 };
-  const cr = (d, k = K) => ({ dx: d, dy: d, k });
-  const toAp = g => ({ x: g.x, y: g.y, w: g.w, h: g.h, c: g.r.map(r => cr(r)), notch: g.notch || 0 });
-  const lerpAp = (a, b, p) => ({
-    x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p), w: lerp(a.w, b.w, p), h: lerp(a.h, b.h, p),
-    c: a.c.map((q, i) => ({ dx: lerp(q.dx, b.c[i].dx, p), dy: lerp(q.dy, b.c[i].dy, p), k: lerp(q.k, b.c[i].k, p) })),
-    notch: lerp(a.notch || 0, b.notch || 0, p),
-  });
-  // outline: per corner a cubic from edge to edge; k = 0 → chamfer, k = K → round, d = 0 → sharp; notch = ▛ cut-out
-  function apPath(g) {
-    const { x, y, w, h } = g; if (w < 0.01 || h < 0.01) return '';
-    const [tl, tr, br, bl] = g.c.map(q => ({ dx: clamp(q.dx, 0, w / 2), dy: clamp(q.dy, 0, h / 2), k: q.k }));
-    const cub = (a, c, b, k) => `C${f(a[0] + (c[0] - a[0]) * k)} ${f(a[1] + (c[1] - a[1]) * k)} ${f(b[0] + (c[0] - b[0]) * k)} ${f(b[1] + (c[1] - b[1]) * k)} ${f(b[0])} ${f(b[1])}`;
-    let d = `M${f(x + tl.dx)} ${f(y)}L${f(x + w - tr.dx)} ${f(y)}` + cub([x + w - tr.dx, y], [x + w, y], [x + w, y + tr.dy], tr.k);
-    d += `L${f(x + w)} ${f(y + h - br.dy)}` + cub([x + w, y + h - br.dy], [x + w, y + h], [x + w - br.dx, y + h], br.k);
-    d += `L${f(x + bl.dx)} ${f(y + h)}` + cub([x + bl.dx, y + h], [x, y + h], [x, y + h - bl.dy], bl.k);
-    d += `L${f(x)} ${f(y + tl.dy)}` + cub([x, y + tl.dy], [x, y], [x + tl.dx, y], tl.k) + 'Z';
-    const n = seg(g.notch || 0, 0.6, 1);
-    if (n > 0.001) { const nx = x + w * (1 - 0.564 * n), ny = y + h * (1 - 0.541 * n); d += `M${f(nx)} ${f(ny)}H${f(x + w)}V${f(y + h)}H${f(nx)}Z`; }
-    return d;
-  }
-  const FULLR = { x: -40, y: -40, w: W + 80, h: H + 80, c: [C0, C0, C0, C0], notch: 0 };
-  const SHAPE_H = 620, SHAPE_CX = 760;
-  const shapeOf = key => { const g = LK[SIG_OF[key]], s = SHAPE_H / g.h;
-    return toAp({ x: SHAPE_CX - g.w * s / 2, y: H / 2 - SHAPE_H / 2, w: g.w * s, h: SHAPE_H, r: g.r.map(v => v * s), notch: g.notch || 0 }); };
-  const SHAPE = { hitec: shapeOf('hitec'), kramat: shapeOf('kramat'), msway: shapeOf('msway') };
-  const ANCHOR = { hitec: [0.5, 0.5], kramat: [0.5, 0.5], msway: [0.42, 0.37] };      // optical centre (▛ keeps clear of its notch)
-  // logo 52 px tall, tagline two lines under it, flush with the logotype's left edge
-  function brandL(key) {
-    const b = BRANDS[key], s = 56 / b.h, P = SHAPE[key];
+  // ---------- 4 + 5: outline shapes across the full width, logos inside; then the white group lockup ----------
+  const PANEL_H = 544, PANEL_GAP = 24;
+  const PANEL = (() => {
+    const ws = { hitec: 1, kramat: LK[0].w / LK[0].h, msway: LK[1].w / LK[1].h };
+    const total = ORDER.reduce((a, k) => a + ws[k] * PANEL_H, 0) + 2 * PANEL_GAP;
+    let x = W / 2 - total / 2; const out = {};
+    ORDER.forEach(k => { const g = LK[SIG_OF[k]], s = PANEL_H / g.h, w = ws[k] * PANEL_H;
+      out[k] = { x, y: H / 2 - PANEL_H / 2, w, h: PANEL_H, r: g.r.map(v => v * s), notch: g.notch || 0 }; x += w + PANEL_GAP; });
+    return out;
+  })();
+  const ANCHOR = { hitec: [0.5, 0.5], kramat: [0.5, 0.5], msway: [0.42, 0.37] };
+  function panelL(key) {
+    const b = BRANDS[key], s = 44 / b.h, P = PANEL[key];
     const ax = P.x + P.w * ANCHOR[key][0], ay = P.y + P.h * ANCHOR[key][1];
-    return { ox: ax - b.w * s / 2, oy: ay - 65, s, lh: b.h * s };
+    return { ox: ax - b.w * s / 2, oy: ay - 50, s, lh: b.h * s };
   }
-  const TAG2 = { hitec: ['IN THE RIGHT', 'TEMPERATURE.'], kramat: ['IN THE RIGHT', 'HANDS.'], msway: ['IN THE RIGHT', 'TIME.'] };
-  function tag2(key, pin, pout) {
-    const L = brandL(key), y0 = L.oy + L.lh + 40;
-    return TAG2[key].map((line, j) => rise(L.ox, y0 + j * 26,
-      `<text x="${f(L.ox)}" y="${f(y0 + j * 26)}" fill="${INKC}" opacity="0.85" font-family="Inter" font-size="18" letter-spacing="4">${line}</text>`,
-      seg(pin, j * 0.15, 1), seg(pout, j * 0.1, 1), 26)).join('');
+  // final row of full brand logos under the group lockup
+  const ROW_Y = 640;
+  let ROWL = null;
+  const rowLayout = () => ROWL || (ROWL = (() => { const s0 = 30, gap = 90, ws = ORDER.map(k => BRANDS[k].w * s0 / BRANDS[k].h), tot = ws.reduce((a, b) => a + b, 0) + gap * 2;
+    let x = W / 2 - tot / 2; const out = {};
+    ORDER.forEach((k, i) => { const s = s0 / BRANDS[k].h; out[k] = { ox: x, oy: ROW_Y - s0 / 2, s, lh: s0 }; x += ws[i] + gap; });
+    return out; })());
+  const lerpL = (a, b, p) => ({ ox: lerp(a.ox, b.ox, p), oy: lerp(a.oy, b.oy, p), s: lerp(a.s, b.s, p), lh: lerp(a.lh, b.lh, p) });
+  function tag2(key, L, pin, pout, op = 1) {
+    const y0 = L.oy + L.lh + 34;
+    return TAG2[key].map((line, j) => rise(L.ox, y0 + j * 22,
+      `<text x="${f(L.ox)}" y="${f(y0 + j * 22)}" fill="${WH}" opacity="${f(0.9 * op)}" font-family="Inter" font-size="15" letter-spacing="4">${line}</text>`,
+      seg(pin, j * 0.15, 1), seg(pout, j * 0.1, 1), 22, 700)).join('');
   }
-  // footage: clean plate + the truck driving along the deck, framed tight with a slow drone push
-  const TRUCK = { x: 866, y: 578, w: 311, h: 151, dir: [0.9496, -0.3134], v: 38 };
-  function footage(t) {
-    const tr = TRUCK.v * (t - PH.b1), s = 1.6 * (1 + 0.05 * seg(t, PH.b0, PH.end));
-    return `<g transform="translate(960 540) scale(${s.toFixed(5)}) translate(-880 -600)">` +
-      `<image href="img/plate.jpg" x="0" y="0" width="1920" height="1441" preserveAspectRatio="none"/>` +
-      `<image href="img/truck.png" x="${f(TRUCK.x - TRUCK.dir[0] * tr)}" y="${f(TRUCK.y - TRUCK.dir[1] * tr)}" width="${TRUCK.w}" height="${TRUCK.h}"/></g>`;
-  }
-  const gridSlot = m => (m.col === 1 ? (m.top ? 0 : 1) : (m.top ? 2 : 3)); // gridMarkers(): left-top, left-bottom, right-top, right-bottom
-  const BSEQ = ['hitec', 'kramat', 'msway'];
   function actBrands(t) {
-    const B = [PH.b0, PH.b1, PH.b2, PH.fin];
-    const p0 = flow(seg(t, PH.b0, PH.b0 + 1.1));
-    // the white page contracts into the brand shape, morphs ● → ■ → ▛, then opens back to the page
-    let page = lerpAp(FULLR, SHAPE.hitec, p0);
-    page = lerpAp(page, SHAPE.kramat, flow(seg(t, PH.b1, PH.b1 + 0.9)));
-    page = lerpAp(page, SHAPE.msway, flow(seg(t, PH.b2, PH.b2 + 0.9)));
-    const pOpen = flow(seg(t, PH.fin + 0.3, PH.fin + 1.3));
-    page = lerpAp(page, FULLR, pOpen);
     let o = '';
-    if (pOpen < 1) o += footage(t) + `<path fill-rule="evenodd" d="${apPath(page)}" fill="#fff"/>`;
-
-    BSEQ.forEach((key, i) => {
-      const b = BRANDS[key], L = brandL(key), TL = { s: L.s, tx: L.ox, ty: L.oy };
-      const tin = B[i], tout = B[i + 1];
-      const lead = i === 0 ? 0.55 : 0.25, nameIn = seg(t, tin + lead, tin + lead + 0.6), nameOut = i < 2 ? seg(t, tout, tout + 0.4) : seg(t, PH.fin, PH.fin + 0.45);
-      if (nameIn > 0 && nameOut < 1) o += logo(key, L, { nameIn, nameOut, digitsIn: 0, digitsOut: 0 }, INKC);
-      o += tag2(key, seg(t, tin + lead + 0.2, tin + lead + 0.8), i < 2 ? seg(t, tout, tout + 0.35) : seg(t, PH.fin, PH.fin + 0.35));
-      // the 24, in brand colour: HI-TEC's drops in from the grid, the others pen-draw; MS WAY's becomes the group 24
-      if (i === 0 && p0 < 1) {
-        o += brand24(key, lerpT(fitT(b.dbb, BOX), TL, p0), rgb(mixC(INK, hexRGB(ACCENT[key]), seg(p0, 0.4, 1))));
-      } else if (i === 2 && t >= PH.fin) {
-        const pJ = flow(seg(t, PH.fin + 0.2, PH.fin + 1.2));
-        o += brand24(key, lerpT(TL, fitT(b.dbb, LK24), pJ), rgb(mixC(hexRGB(ACCENT[key]), INK, seg(pJ, 0.2, 0.7))), 1 - seg(pJ, 0.5, 0.9));
-      } else {
-        const dIn = i === 0 ? 1 : seg(t, tin + 0.1, tin + 0.7), dOut = i < 2 ? seg(t, tout, tout + 0.35) : 0;
-        if (t >= tin && dOut < 1) o += logo(key, L, { nameIn: 0, nameOut: 0, digitsIn: dIn, digitsOut: dOut }, ACCENT[key]);
+    const fin = PH.fin;
+    ORDER.forEach((key, i) => {
+      const b = BRANDS[key], P = PANEL[key], t0 = PH.brands + 0.15 + i * 0.45;
+      // outline draws on, then folds into the group signet and fills in
+      const pd = flow(seg(t, t0, t0 + 1.0)), pf = flow(seg(t, fin + 0.1 + i * 0.07, fin + 1.1 + i * 0.07));
+      const g = lerpGeom(P, shiftY(LK[SIG_OF[key]], FIN_DY), pf);
+      o += `<path d="${outline(g)}" fill="${WH}" fill-opacity="${f(seg(pf, 0.45, 0.9))}" stroke="${WH}" stroke-width="${f(lerp(2, 1, pf))}" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
+      // logo inside, white: digits (HI-TEC's arrive from the grid, morphing MS WAY → HI-TEC), markers, name; tagline
+      const LP = panelL(key), LR = rowLayout()[key], pr = flow(seg(t, fin + 0.35 + i * 0.07, fin + 1.35 + i * 0.07));
+      const L = lerpL(LP, LR, pr);
+      const nameIn = seg(t, t0 + 0.55, t0 + 1.15), dIn = seg(t, t0 + 0.35, t0 + 0.95);
+      if (i === 0 && t < PH.brands + 1.1) {
+        const pg = flow(seg(t, PH.brands, PH.brands + 1.1));
+        o += uT(lerpK(boxT(BOX), logoDigitsT(key, LP), pg), morphFn('msway', 'hitec')(pg), WH);
+        o += logo(key, L, { nameIn, nameOut: 0, digitsIn: 0, digitsOut: 0 }, WH);
+      } else o += logo(key, L, { nameIn, nameOut: 0, digitsIn: i === 0 ? 1 : dIn, digitsOut: 0 }, WH);
+      let mk = '';
+      const gm = i === 0 ? gridMarkers(t) : null;
+      for (let sl = 0; sl < 6; sl++) {
+        const m = b.markers[sl];
+        let mg = markerGeom(key, sl, L);
+        if (i === 0 && m.col > 0) { const slot = m.col === 1 ? (m.top ? 0 : 1) : (m.top ? 2 : 3); mg = lerpGeom(gm[slot].g, mg, flow(seg(t, PH.brands, PH.brands + 1.1))); }
+        else { const kk = ease.out(seg(t, t0 + 0.4 + sl * 0.03, t0 + 0.8 + sl * 0.03)); if (kk <= 0) continue; mg = scaleAbout(mg, kk); }
+        mk += shape(mg);
       }
+      o += `<g fill="${WH}">${mk}</g>`;
+      o += tag2(key, LP, seg(t, t0 + 0.75, t0 + 1.35), seg(t, fin, fin + 0.35));
     });
-    // markers: HI-TEC's come off the grid corners, then glide and re-shape into KRAMAT's and MS WAY's,
-    // and finally fold column by column into the signet ■ ▛ ●
-    const gm = gridMarkers(t), LH = brandL('hitec'), LKr = brandL('kramat'), LM = brandL('msway');
-    const pk = flow(seg(t, PH.b1 + 0.1, PH.b1 + 0.85)), pmw = flow(seg(t, PH.b2 + 0.1, PH.b2 + 0.85));
-    for (let sl = 0; sl < 6; sl++) {
-      const m = BRANDS.hitec.markers[sl];
-      let g = markerGeom('hitec', sl, LH);
-      if (m.col > 0) g = lerpGeom(gm[gridSlot(m)].g, g, p0);
-      else { const kk = ease.out(seg(t, PH.b0 + 0.6 + sl * 0.03, PH.b0 + 1.0 + sl * 0.03)); if (kk <= 0) continue; g = scaleAbout(g, kk); }
-      g = lerpGeom(g, markerGeom('kramat', sl, LKr), pk);
-      g = lerpGeom(g, markerGeom('msway', sl, LM), pmw);
-      const col = BRANDS.msway.markers[sl].col, key = ['kramat', 'msway', 'hitec'][col];
-      const pf = flow(seg(t, PH.fin + 0.25 + col * 0.07, PH.fin + 1.15 + col * 0.07));
-      if (pf > 0) g = lerpGeom(g, LK[col], pf);
-      o += shape(g, ` fill="${INKC}"`) + (pf > 0 ? shape(g, ` fill="url(#ag_${key})" opacity="${f(seg(pf, 0.05, 0.5))}"`) : '');
-    }
-    // finale: the thin group 24 lands; GROUP is pulled out of the 24, the tagline out of the ●
-    const pJ = flow(seg(t, PH.fin + 0.2, PH.fin + 1.2));
-    o += thin24(LK24, INKC, seg(pJ, 0.5, 0.9));
-    const pG = flow(seg(t, PH.fin + 1.1, PH.fin + 1.9)), pT = flow(seg(t, PH.fin + 1.25, PH.fin + 2.05));
+    // finale: GROUP + the thin 24 pulled out of the ■, the tagline out of the ● — white, a little higher
+    const sq = shiftY(LK[0], FIN_DY), ci = shiftY(LK[2], FIN_DY);
+    const pG = flow(seg(t, fin + 0.9, fin + 1.7)), pT = flow(seg(t, fin + 1.0, fin + 1.8));
     if (pG > 0) {
-      const push = (LK24.x - GROUP_L) * (1 - pG);
-      o += `<clipPath id="fg"><rect x="-400" y="0" width="${f(LK24.x - 6 + 400)}" height="${H}"/></clipPath><g clip-path="url(#fg)"><g transform="translate(${f(push)} 0) ${LOCK}" fill="${INKC}">${GRP.grp.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
+      const push = (sq.x - GROUP_L) * (1 - pG);
+      o += `<clipPath id="fg"><rect x="-400" y="0" width="${f(sq.x + 400)}" height="${H}"/></clipPath><g clip-path="url(#fg)"><g transform="translate(${f(push)} 0) ${lockT(FIN_DY)}" fill="${WH}">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g></g>`;
     }
     if (pT > 0) {
-      const ci = LK[2], push = (TAG_R - (ci.x + ci.w)) * (1 - pT);
-      o += `<clipPath id="ft"><rect x="${f(ci.x + ci.w)}" y="0" width="${W}" height="${H}"/></clipPath><g clip-path="url(#ft)"><g transform="translate(${f(-push)} 0) ${LOCK}" fill="${INKC}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
+      const push = (TAG_R - (ci.x + ci.w)) * (1 - pT);
+      o += `<clipPath id="ft"><rect x="${f(ci.x + ci.w)}" y="0" width="${W}" height="${H}"/></clipPath><g clip-path="url(#ft)"><g transform="translate(${f(-push)} 0) ${lockT(FIN_DY)}" fill="${WH}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
     }
-    return o;
-  }
-
-  function actGrid(t) {
-    const alpha = 1 - seg(t, PH.b0, PH.b0 + 0.5);
-    let o = gridLines(seg(t, PH.grid, PH.grid + 1.0), alpha) + highlights(t, alpha) + gridLabels(t, alpha * ease.out(seg(t, PH.grid + 0.4, PH.grid + 1.0))) + caption(t, alpha);
-    if (t >= PH.f1 && t < PH.b0) o += gridDigits(t);
-    // corner markers (carried into the HI-TEC logo by actBrands)
-    if (t < PH.b0) o += gridMarkers(t).map(m => shape(m.g, ` fill="${INKC}"`)).join('');
     return o;
   }
 
   const zoomAbout = (dx, s, cx = W / 2, cy = H / 2) => `translate(${f(dx + cx)} ${f(cy)}) scale(${s.toFixed(5)}) translate(${-cx} ${-cy})`;
-  const camR = t => 1 + 0.04 * (t / PH.end); // one slow continuous push-in over the whole piece
+  const camR = t => 1 + 0.04 * (t / PH.end);
   function reveal(t) {
     clipId = 0;
+    if (!MORPH.host) buildMorph();
     let body = '';
-    if (t < PH.f1 + 0.01) body += actGroup(t);
+    // after the plate fills the frame, the footage is the background
+    if (t >= PH.full + 0.85) body += footage(t);
+    if (t < PH.f1 + 0.01) body += actOpen(t);
     if (t >= PH.grid) body += actGrid(t);
-    if (t >= PH.b0) body += actBrands(t);
+    if (t >= PH.brands) body += actBrands(t);
     return svgWrap(defs() + `<rect width="${W}" height="${H}" fill="#fff"/><g transform="${zoomAbout(0, camR(t))}">${body}</g>`);
   }
 
@@ -768,6 +796,7 @@
 
   let ready = false;
   window.G24 = {
+    _brands: () => BRANDS, _grp: () => GRP,
     SCENES,
     init() { if (!ready) { parseBrands(); parseGroup(); ready = true; } },
     frame(scene, t) { this.init(); return SCENES[scene].fn(t); },
