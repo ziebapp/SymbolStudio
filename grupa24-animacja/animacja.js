@@ -10,10 +10,11 @@
  *  F3  hasło odpala linie konstrukcyjne, wideo skaluje się do środka,
  *      po liniach rysują się obrysy emblematów: ścięta apla, kwadrat, koło
  *  F4  wideo zjeżdża do obrysów i jedzie dalej w masce logo — to wideo było aplą pod GRUPA
- *  F5–F7  „światła na skrzyżowaniu”: zapala się apla / 2 / 4, z kształtu rodzi się sygnet marki
+ *  F5–F7  „światła na skrzyżowaniu”: zapala się apla / 2 / 4, obok buduje się submarka
+ *         (typografia → obrys sygnetu → kolor); „24” stoi, sygnety wymieniają się wokół niego
  *  F8–F10 ramka z wideo w kształcie sygnetu zmienia się razem ze światłami
  *  F11–F12 koło HI-TEC rozszerza się i wypycha wideo, logo GRUPY odjeżdża w lewo
- *  F13 zestawienie wszystkich logotypów — każdy sygnet wylatuje ze „swojego” elementu GRUPY
+ *  F13 zestawienie: kolumna submarek buduje się kaskadowo od góry do dołu
  *
  * Kamera przez cały czas bardzo powoli najeżdża na scenę, więc obraz nigdy nie stoi.
  */
@@ -466,10 +467,6 @@ const CAPLINES = [457.02, 489.52];
 const PT = p => ({ point: p });
 const partSpec = (part, shape) => t => { const [x, y, s] = markPart(part, t); return { shape, x, y, s }; };
 const plateSpec = partSpec('plate', 'plate'), squareSpec = partSpec('square', 'square'), circleSpec = partSpec('circle', 'circle');
-const centerOf = (spec, c) => PT([spec.x + c[0] * spec.s, spec.y + c[1] * spec.s]);
-const plateShape = t => { const s = plateSpec(t); return [s, centerOf(s, [180.664, 31.482])]; };
-const squareShape = t => { const s = squareSpec(t); return [s, centerOf(s, [34, 31.482])]; };
-const circleShape = t => { const s = circleSpec(t); return [s, centerOf(s, [32.912, 32.912])]; };
 
 const frame = (L, x, y, s) => [{ shape: L + '_outer', x, y, s }, { shape: L + '_inner', x, y, s, hole: true }];
 const K_C = [743, 392.518], H_C = [790.544, 417.324];
@@ -514,41 +511,51 @@ function sygnetState(b, ox, oy, scale) {
   return frame(FRAME_OF[b], ox + s[0] * scale, oy + s[1] * scale, k);
 }
 const SLOT = Object.fromEntries(BR.map(b => [b, brandOrigin(b)]));
-const SLOT_SYG = Object.fromEntries(BR.map(b => [b, sygnetState(b, SLOT[b][0], SLOT[b][1], BS)]));
 
-// sygnet marki w F5–F7: rodzi się z apli GRUPA, potem przechodzi w kolejne kształty
-const SLOT_MORPH = [
-  [8.8, 10.0, plateShape, SLOT_SYG.kramat],
-  [10.7, 11.7, SLOT_SYG.kramat, SLOT_SYG.msway],
-  [12.3, 13.3, SLOT_SYG.msway, SLOT_SYG.hitec],
-];
+/*
+ * Submarki budują się obok GRUPY przez konstrukcję:
+ * wjeżdża typografia → sygnet rysuje się obrysem (z lekkim najazdem) → wypełnia się kolorem.
+ * W F5–F7 „24” stoi w miejscu, a wokół niego wymieniają się elementy:
+ * stary sygnet przybliża się i szybko gaśnie, na jego miejsce wjeżdża następny.
+ */
+function logoTracks(a, sygDelay, exit = null) {
+  const s = a + sygDelay;
+  const typeOp = [[a, a + 0.6, 1, E.out]], wordDx = [[a, a + 0.7, 0, E.out]];
+  const zoom = [[s, s + 0.8, 1, E.out]], sOp = [[s - 0.01, s, 1, E.lin]];
+  if (exit !== null) {
+    const o = exit;
+    typeOp.push([o, o + 0.35, 0]); wordDx.push([o, o + 0.35, -22]);
+    zoom.push([o, o + 0.35, 1.25]); sOp.push([o, o + 0.35, 0]);
+  }
+  return {
+    typeOp: seq(0, ...typeOp), wordDx: seq(-28, ...wordDx),
+    draw: seq(0, [s, s + 0.8, 1]), fill: seq(0, [s + 0.55, s + 1.0, 1]),
+    zoom: seq(0.8, ...zoom), sOp: seq(0, ...sOp),
+  };
+}
+
+// F5–F7: jedna marka naraz obok GRUPY
 const SLOT_T = {
-  fill: seq(C.black, [9.0, 9.9, C.kramat], [10.7, 11.7, C.msway], [12.3, 13.3, C.hitec]),
-  op: seq(0, [8.79, 8.8, 1, E.lin], [13.8, 14.3, 0]),
-  dx: seq(0, [13.8, 14.3, 24]),
-  kramat: { op: seq(0, [9.7, 10.3, 1, E.out], [10.6, 11.0, 0]), dy: seq(14, [9.7, 10.3, 0, E.out], [10.6, 11.0, -14]) },
-  msway: { op: seq(0, [11.2, 11.8, 1, E.out], [12.2, 12.6, 0]), dy: seq(14, [11.2, 11.8, 0, E.out], [12.2, 12.6, -14]) },
-  hitec: { op: seq(0, [12.8, 13.4, 1, E.out], [13.8, 14.2, 0]), dy: seq(14, [12.8, 13.4, 0, E.out], [13.8, 14.2, -14]) },
+  kramat: logoTracks(8.8, 0.5, 10.6),
+  msway: logoTracks(10.85, 0.05, 12.2),
+  hitec: logoTracks(12.45, 0.05, 13.8),
+  // „24” zostaje w miejscu, zmienia tylko kolor
+  digOp: seq(0, [9.25, 9.75, 1, E.out], [13.8, 14.15, 0]),
+  digFill: seq(C.kramat, [10.7, 11.2, C.msway], [12.3, 12.8, C.hitec]),
 };
 
-// F13: zestawienie logotypów — sygnety wylatują z apli, z „2” i z „4”
+// F13: kolumna submarek buduje się kaskadowo od góry do dołu
 const FIN = { kramat: [1153, 231], msway: [1153, 419], hitec: [1153, 607] };
-const FIN_SRC = { kramat: plateShape, msway: squareShape, hitec: circleShape };
 const FIN_T = Object.fromEntries(BR.map((b, i) => {
-  const t0 = 22.2 + i * 0.15, w0 = 23.25 + i * 0.15;
-  return [b, {
-    morph: [[t0, t0 + 1.3, FIN_SRC[b], sygnetState(b, FIN[b][0], FIN[b][1], 1)]],
-    fill: seq(C.black, [t0, t0 + 0.7, C[b]]),
-    op: seq(0, [t0 - 0.01, t0, 1, E.lin]),
-    wordOp: seq(0, [w0, w0 + 0.7, 1, E.out]),
-    wordDx: seq(18, [w0, w0 + 0.8, 0, E.out]),
-    digOp: seq(0, [w0 - 0.1, w0 + 0.4, 1, E.out]),
-  }];
+  const t0 = 22.3 + i * 0.35;
+  return [b, { ...logoTracks(t0, 0.35), digOp: seq(0, [t0 + 0.3, t0 + 0.7, 1, E.out]) }];
 }));
 
 /* ------------------------------------------------------------------ DOM */
 
 const $ = id => document.getElementById(id);
+const tf = (x, y, s) => `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${s.toFixed(4)})`;
+const op = v => Math.max(0, Math.min(1, v)).toFixed(3);
 const el = (tag, attrs = {}, parent) => {
   const n = document.createElementNS(SVGNS, tag);
   for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
@@ -556,7 +563,7 @@ const el = (tag, attrs = {}, parent) => {
   return n;
 };
 
-const defs = $('defs'), gLines = $('lines'), gGhosts = $('ghosts'), gMark = $('mark'), gBrands = $('brands');
+const defs = $('defs'), gLines = $('lines'), gMark = $('mark'), gBrands = $('brands');
 const G = D.grupa;
 
 // odsłanianie (wipe) w lokalnych współrzędnych części
@@ -595,34 +602,67 @@ const band = [el('line', {}, gLines), el('line', {}, gLines)];
 const vlines = VLINES.map(() => el('line', {}, gLines));
 const caplines = CAPLINES.map(() => el('line', {}, gLines));
 
-// sygnety (pod logo GRUPA, żeby „wychodziły” spod elementów)
-const slotSyg = el('path', {}, gGhosts);
-const finSyg = Object.fromEntries(BR.map(b => [b, el('path', {}, gGhosts)]));
+// sygnet: wypełnienie + dwa obrysy (zewnętrzny i otwór) rysowane jednocześnie od lewej
+function sygnetNode(b, ox, oy, scale, parent) {
+  const st = sygnetState(b, ox, oy, scale), color = D.brands[b].color;
+  const A = specPts(st[0], new Float64Array(N * 2)), B = specPts(st[1], new Float64Array(N * 2));
+  const sb = D.brands[b].sygnetBB;
+  const g = el('g', {}, parent);
+  return {
+    g,
+    c: [ox + (sb[0] + sb[2]) / 2 * scale, oy + (sb[1] + sb[3]) / 2 * scale],
+    fill: el('path', { d: contoursD([{ pts: A, hole: false }, { pts: B, hole: true }]), fill: color }, g),
+    lines: [A, B].map(pts => el('path', {
+      d: contoursD([{ pts, hole: false }]), fill: 'none', stroke: color, 'stroke-width': 1.6,
+      pathLength: 1, 'stroke-dasharray': '0 2', 'stroke-linejoin': 'round',
+    }, g)),
+  };
+}
 
-function brandGroup(b, parent) {
+function brandGroup(b, parent, withDigits = true) {
   const B = D.brands[b];
   const g = el('g', {}, parent);
   return {
     g,
     word: el('path', { d: B.word, fill: rgb(C.ink) }, el('g', {}, g)),
-    digits: el('path', { d: B.digits, fill: B.color }, el('g', {}, g)),
     tagline: el('path', { d: B.tagline, fill: rgb(C.ink) }, el('g', {}, g)),
+    digits: withDigits ? el('path', { d: B.digits, fill: B.color }, el('g', {}, g)) : null,
   };
 }
-const slot = Object.fromEntries(BR.map(b => [b, brandGroup(b, gBrands)]));
-const fin = Object.fromEntries(BR.map(b => [b, brandGroup(b, gBrands)]));
+const slot = Object.fromEntries(BR.map(b => [b, { type: brandGroup(b, gBrands, false), syg: sygnetNode(b, SLOT[b][0], SLOT[b][1], BS, gBrands) }]));
+const slotDigits = el('path', { d: D.brands.kramat.digits }, el('g', { transform: tf(SLOT.kramat[0], SLOT.kramat[1], BS) }, gBrands));
+const fin = Object.fromEntries(BR.map(b => [b, { type: brandGroup(b, gBrands), syg: sygnetNode(b, FIN[b][0], FIN[b][1], 1, gBrands) }]));
 
 const camera = $('camera'), vlayer = $('vlayer'), vinner = $('vinner'), fadeEl = $('fade');
 
 /* ---------------------------------------------------------------- render */
 
-const tf = (x, y, s) => `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${s.toFixed(4)})`;
 const setPart = (node, part, t, dy = 0) => {
   const [x, y, s] = markPart(part, t);
   node.setAttribute('transform', tf(x, y + dy, s));
 };
-const op = v => Math.max(0, Math.min(1, v)).toFixed(3);
-const clipBufs = makeBufs(3), sygBufs = makeBufs(2);
+const clipBufs = makeBufs(3);
+
+function updateSygnet(n, K, t) {
+  const o = at(K.sOp, t);
+  n.g.style.display = o > 0.001 ? '' : 'none';
+  if (o <= 0.001) return;
+  const z = at(K.zoom, t), [cx, cy] = n.c;
+  n.g.setAttribute('transform', `translate(${cx.toFixed(2)} ${cy.toFixed(2)}) scale(${z.toFixed(4)}) translate(${(-cx).toFixed(2)} ${(-cy).toFixed(2)})`);
+  n.g.setAttribute('opacity', op(o));
+  const d = at(K.draw, t).toFixed(4);
+  for (const l of n.lines) l.setAttribute('stroke-dasharray', `${d} 2`);
+  n.fill.setAttribute('opacity', op(at(K.fill, t)));
+}
+function updateType(g, x, y, s, K, t) {
+  const o = at(K.typeOp, t);
+  g.g.style.display = o > 0.001 ? '' : 'none';
+  if (o <= 0.001) return;
+  const dx = at(K.wordDx, t);
+  g.word.parentNode.setAttribute('transform', tf(x + dx, y, s));
+  g.tagline.parentNode.setAttribute('transform', tf(x - dx, y, s));
+  g.g.setAttribute('opacity', op(o));
+}
 
 function render(t) {
   /* kamera: stały, bardzo powolny najazd */
@@ -699,41 +739,23 @@ function render(t) {
     if (opk) w.outer.setAttribute('opacity', op(at(opk, t)));
   }
 
-  /* F5–F7: logotyp marki obok GRUPY */
-  const sOp = at(SLOT_T.op, t);
-  slotSyg.style.display = sOp > 0.001 ? '' : 'none';
-  if (sOp > 0.001) {
-    slotSyg.setAttribute('d', contoursD(morphAt(SLOT_MORPH, t, sygBufs)));
-    slotSyg.setAttribute('fill', rgb(at(SLOT_T.fill, t)));
-    slotSyg.setAttribute('opacity', op(sOp));
-    slotSyg.setAttribute('transform', `translate(${at(SLOT_T.dx, t).toFixed(2)} 0)`);
-  }
+  /* F5–F7: submarka obok GRUPY */
   for (const b of BR) {
-    const o = at(SLOT_T[b].op, t), g = slot[b];
-    g.g.style.display = o > 0.001 ? '' : 'none';
-    if (o <= 0.001) continue;
-    const [x, y] = SLOT[b], dy = at(SLOT_T[b].dy, t);
-    g.word.parentNode.setAttribute('transform', tf(x, y + dy, BS));
-    g.tagline.parentNode.setAttribute('transform', tf(x, y + dy, BS));
-    g.digits.parentNode.setAttribute('transform', tf(x, y, BS));
-    g.g.setAttribute('opacity', op(o));
+    updateType(slot[b].type, SLOT[b][0], SLOT[b][1], BS, SLOT_T[b], t);
+    updateSygnet(slot[b].syg, SLOT_T[b], t);
   }
+  const dOp = at(SLOT_T.digOp, t);
+  slotDigits.style.display = dOp > 0.001 ? '' : 'none';
+  slotDigits.setAttribute('opacity', op(dOp));
+  slotDigits.setAttribute('fill', rgb(at(SLOT_T.digFill, t)));
 
-  /* F13: zestawienie */
+  /* F13: kolumna submarek */
   for (const b of BR) {
-    const F = FIN_T[b], o = at(F.op, t);
-    finSyg[b].style.display = o > 0.001 ? '' : 'none';
-    fin[b].g.style.display = o > 0.001 ? '' : 'none';
-    if (o <= 0.001) continue;
-    finSyg[b].setAttribute('d', contoursD(morphAt(F.morph, t, sygBufs)));
-    finSyg[b].setAttribute('fill', rgb(at(F.fill, t)));
-    const [x, y] = FIN[b], dx = at(F.wordDx, t), wo = op(at(F.wordOp, t));
-    fin[b].word.parentNode.setAttribute('transform', tf(x + dx, y, 1));
-    fin[b].word.setAttribute('opacity', wo);
-    fin[b].tagline.parentNode.setAttribute('transform', tf(x - dx, y, 1));
-    fin[b].tagline.setAttribute('opacity', wo);
-    fin[b].digits.parentNode.setAttribute('transform', tf(x, y, 1));
-    fin[b].digits.setAttribute('opacity', op(at(F.digOp, t)));
+    const F = FIN_T[b], g = fin[b].type;
+    updateType(g, FIN[b][0], FIN[b][1], 1, F, t);
+    updateSygnet(fin[b].syg, F, t);
+    g.digits.parentNode.setAttribute('transform', tf(FIN[b][0], FIN[b][1], 1));
+    g.digits.setAttribute('opacity', op(at(F.digOp, t)));
   }
 
   fadeEl.style.opacity = op(at(T.fade, t));
