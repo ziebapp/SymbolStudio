@@ -414,7 +414,8 @@
   //    logos settle in a row under it
   // Brand order everywhere: HI-TEC → KRAMAT → MS WAY.
   // =====================================================================
-  const PH = { in: 0.15, fly: 0.75, pull: 1.85, strip: 2.45, full: 3.2, settle: 3.95, grid: 4.4, f1: 5.4, f2: 6.5, f3: 7.6, brands: 8.8, fin: 12.2, end: 15.4 };
+  const PH = { in: 0.15, trim: 0.55, fall: 2.1, claim: 2.85, absorb: 3.8, full: 4.5, settle: 5.3, grid: 5.6, f1: 6.9, f2: 7.8, f3: 8.7,
+               textOut: 9.6, slide: 10.0, compare: 12.0, logos: 13.0, outline: 14.0, pulse: 15.4, fill: 16.5, zoom: 17.1, dock: 18.0, rise: 18.9, end: 21.0 };
   const flow = x => (x < 0.5 ? 4 * x ** 3 : 1 - Math.pow(-2 * x + 2, 3) / 2); // cubic in-out: short tails, chains without stalls
   const INKC = '#0a0a0a', WH = '#fff';
   const ACCENT = { hitec: '#5FE0D0', kramat: '#FF7A3D', msway: '#8FE58A' };
@@ -546,49 +547,74 @@
       `<rect x="-40" y="-40" width="${W + 80}" height="${H + 80}" fill="#000" opacity="0.3"/>`;
   }
 
-  // ---------- 1 + 2: GROUP 24 → shapes dock → pulled into the ■ → strip → full frame → 24 onto the grid ----------
-  // one thing at a time: every element either stays put or moves on one clean curve
+  // ---------- act 1: GROUP, the 24 drawn as a path, shapes fall, claim — the ■ sits at the frame centre ----------
+  const LX = W / 2 - (LK[0].x + LK[0].w / 2);                    // shift that centres the ■
+  const sx = g => ({ ...g, x: g.x + LX });
+  const ease3 = x => 1 - Math.pow(1 - x, 3);
+  // thin 24 as centre lines (cell units) — stroked with butt caps and mitre joins it equals the filled thin form
+  const THIN = { T: 0.42, w: 4.87, o: 7.03 };
+  function thinStrokes(P, p2, p4a, p4b, color) {
+    const { T, w, o } = THIN, h = T / 2, m = 2.5, X = x => f(P.ox + x * P.c), Y = y => f(P.oy + y * P.c);
+    const seg2 = `M${X(0)} ${Y(h)}L${X(w - h)} ${Y(h)}L${X(w - h)} ${Y(m)}L${X(h)} ${Y(m)}L${X(h)} ${Y(5 - h)}L${X(w)} ${Y(5 - h)}`;
+    const seg4a = `M${X(o + h)} ${Y(0)}L${X(o + h)} ${Y(m)}L${X(o + 5)} ${Y(m)}`, seg4b = `M${X(o + 5 - h)} ${Y(0)}L${X(o + 5 - h)} ${Y(5)}`;
+    const st = (d, p) => p <= 0 ? '' : `<path d="${d}" fill="none" stroke="${color}" stroke-width="${f(T * P.c)}" stroke-linejoin="miter" stroke-miterlimit="4" pathLength="1" stroke-dasharray="${p.toFixed(4)} 1"/>`;
+    return st(seg2, p2) + st(seg4a, p4a) + st(seg4b, p4b);
+  }
+  // the plate: ■ → a band that takes in 24, shapes and claim → full frame
+  const BAND = (() => { const x0 = LK24.x + LX - 40, x1 = TAG_R + LX + 40, h = LK[0].h * 1.9;
+    return { x: x0, y: H / 2 - h / 2, w: x1 - x0, h, r: [0, 0, 0, 0] }; })();
+  function plateGeom(t) {
+    const pa = flow(seg(t, PH.absorb, PH.absorb + 0.75)), pf = flow(seg(t, PH.full, PH.full + 0.95));
+    return lerpGeom(lerpGeom(sx(LK[0]), BAND, pa), FULLG, pf);
+  }
   function actOpen(t) {
     let o = '';
-    const pm = flow(seg(t, PH.pull, PH.pull + 0.7));          // ▛ ● slide into the widening ■
-    const pB = flow(seg(t, PH.strip, PH.strip + 0.8));        // ■ → strip (grows to the left)
-    const pF = flow(seg(t, PH.full, PH.full + 0.9));          // strip → full frame
-    const pS = flow(seg(t, PH.settle, PH.settle + 1.1));      // the 24 → grid
-    let g = lerpGeom(LK[0], MERGED, pm);
-    g = lerpGeom(g, STRIP, pB);
-    g = lerpGeom(g, FULLG, pF);
-    // GROUP rises in, then is pushed left by the strip's leading edge (contact push, no extra motion)
+    const g = plateGeom(t);
+    const pa = flow(seg(t, PH.absorb, PH.absorb + 0.75));
+    // GROUP: rises in, then the plate's leading edge pushes it out of frame
     const pIn = ease.out(seg(t, PH.in, PH.in + 0.8));
-    const gRight = lx(251) + 510 * LS, push = Math.min(0, g.x - 28 - gRight);
-    o += `<clipPath id="band"><rect x="-1200" y="${f(ly(405) + 80 * LS)}" width="${W + 2400}" height="${f(110 * LS)}"/></clipPath>`;
-    if (pF < 1) o += `<g clip-path="url(#band)"><g transform="translate(${f(push)} ${f((1 - pIn) * 90)}) ${lockT(0)}" fill="${INKC}">${GRP.grp.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
-    // the 24: stays where it is while the strip passes over it, then glides onto the grid
-    const pIn24 = ease.out(seg(t, PH.in + 0.1, PH.in + 0.9));
-    const P24 = lerpP({ ...P_LOCK(), oy: P_LOCK().oy + (1 - pIn24) * 90 }, P_GRID(), pS);
+    const gRight = lx(251) + 510 * LS + LX, push = Math.min(0, g.x - 30 - gRight);
+    o += `<clipPath id="band"><rect x="-2400" y="${f(ly(405) + 80 * LS)}" width="${W + 4800}" height="${f(110 * LS)}"/></clipPath>`;
+    o += `<g clip-path="url(#band)"><g transform="translate(${f(LX + push)} ${f((1 - pIn) * 90)}) ${lockT(0)}" fill="${INKC}">${GRP.grp.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
+    // the 24: drawn as a path (2 from its top-left corner down, then 4), then filled; pulled to the centre; then onto the grid
+    const p2 = seg(t, PH.trim, PH.trim + 0.8), p4a = seg(t, PH.trim + 0.7, PH.trim + 1.15), p4b = seg(t, PH.trim + 1.05, PH.trim + 1.5);
+    const PL = { ...P_LOCK(), ox: P_LOCK().ox + LX };
+    const wThin = (THIN.o + 5) * PL.c;
+    const PC = { ...PL, ox: W / 2 - wThin / 2 };                    // the 24 centred in the band
+    const pS = flow(seg(t, PH.settle, PH.settle + 1.0));
+    const P24 = lerpP(lerpP(PL, PC, pa), P_GRID(), pS);
     const F24 = lerpForm(form24('thin'), form24('thinG'), pS);
-    if (pF < 1) o += `<g clip-path="url(#band)">${draw24(F24, P24, INKC)}</g>`;
-    // ▛ ● fly in from the right and dock, then slide into the ■ (drawn under it)
-    [1, 2].forEach(i => {
-      const k = ease.out(seg(t, PH.fly + i * 0.12, PH.fly + 0.85 + i * 0.12));
-      if (k <= 0) return;
-      let s = lerpGeom({ ...LK[i], x: W + 60 }, LK[i], k);
-      s = lerpGeom(s, { ...TUCK[i], x: MERGED.x + 8 }, pm);
-      if (pm < 1) o += shape(s, ` fill="${INKC}"`);
+    const filled = p4b >= 1;
+    const draw = color => filled ? draw24(F24, P24, color) : thinStrokes(P24, p2, p4a, p4b, color);
+    o += draw(INKC);
+    // shapes fall in one, two, three (no bounce), then are pulled into the plate
+    [0, 1, 2].forEach(i => {
+      const k = ease3(seg(t, PH.fall + i * 0.22, PH.fall + 0.55 + i * 0.22));
+      if (k <= 0 || (i === 0 && pa > 0)) return;
+      let s = lerpGeom({ ...sx(LK[i]), y: LK[i].y - 640 }, sx(LK[i]), k);
+      if (i > 0) s = lerpGeom(s, { ...s, x: W / 2 - s.w / 2 }, pa);
+      if (pa < 1) o += shape(s, ` fill="${INKC}"`);
     });
-    // the ■: flies in first; becomes the plate
-    const kq = ease.out(seg(t, PH.fly, PH.fly + 0.85));
-    if (kq > 0) {
-      const gq = t < PH.pull ? lerpGeom({ ...LK[0], x: W + 60 }, LK[0], kq) : g;
+    // claim: two lines ride in, then get pulled into the plate
+    const pC = seg(t, PH.claim, PH.claim + 0.6), dxC = (W / 2 - (TAG_R + LX)) * pa;
+    if (pC > 0 && pa < 1) {
+      o += `<clipPath id="cl"><rect x="${f(TAG_R + LX - 320)}" y="0" width="${W}" height="${H}"/></clipPath>`;
+      o += `<g clip-path="url(#cl)"><g transform="translate(${f(LX + dxC + (1 - ease3(pC)) * 120)} 0) ${lockT(0)}" fill="${INKC}" opacity="${f(Math.min(1, pC * 2))}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
+    }
+    // the plate (■ itself until the pull), footage opening inside, 24 white inside
+    if (t >= PH.fall) {
+      const k0 = ease3(seg(t, PH.fall, PH.fall + 0.55));
+      const gq = pa > 0 ? g : lerpGeom({ ...sx(LK[0]), y: LK[0].y - 640 }, sx(LK[0]), k0);
       o += shape(gq, ` fill="${INKC}"`);
       o += `<clipPath id="win"><path d="${rr(gq)}"/></clipPath>`;
-      const pFoot = seg(t, PH.strip + 0.1, PH.strip + 0.6);
+      const pFoot = seg(t, PH.absorb + 0.35, PH.absorb + 0.9);
       if (pFoot > 0) o += `<g clip-path="url(#win)" opacity="${f(pFoot)}">${footage(t)}</g>`;
-      o += `<g clip-path="url(#win)">${draw24(F24, P24, WH)}</g>`;
+      o += `<g clip-path="url(#win)">${draw(WH)}</g>`;
     }
     return o;
   }
 
-  // ---------- 3: grid + evolution (shape morph) ----------
+  // ---------- act 2: one grid, the 24 runs through its styles ----------
   const TFS = () => [PH.f1, PH.f2, PH.f3];
   const FORM_LABEL = { thin: ['GROUP 24', 'STROKE', 1], hitec: ['HI-TEC 24', 'ROUND + DOTS', 2], kramat: ['KRAMAT 24', 'CHAMFER 45°', 3], msway: ['MS WAY 24', 'RADIUS ½ CELL', 4] };
   const HL = {
@@ -602,17 +628,15 @@
     if (form === 'kramat') return [0, 0, 0, 0];
     const Q = CELL; return top ? (right ? [0, Q, 0, 0] : [Q, 0, 0, 0]) : (right ? [0, 0, Q, 0] : [0, 0, 0, Q]);
   };
-  function gridMarkers(t) {
-    const TF = TFS(), k = ease.out(seg(t, TF[0] + 0.35, TF[0] + 0.8));
-    if (k <= 0) return [];
+  // the four corner markers of a grid, shaped like a form's (or between two forms)
+  const cornerMarkers = (formA, formB, p, k) => {
     const out = [];
     for (const right of [false, true]) for (const top of [true, false]) {
-      let r = markerR('hitec', right, top);
-      [1, 2].forEach(i => { const p = flow(seg(t, TF[i], TF[i] + 0.8)); const nr = markerR(FORMS[i + 1], right, top); r = r.map((v, j) => lerp(v, nr[j], p)); });
-      out.push({ right, top, g: scaleAbout({ x: GRID.x + (right ? 12 : 0) * CELL, y: GRID.y + (top ? 2 : 10) * CELL, w: CELL, h: CELL, r }, k) });
+      const ra = markerR(formA, right, top), rb = markerR(formB, right, top), r = ra.map((v, j) => lerp(v, rb[j], p));
+      out.push(scaleAbout({ x: GRID.x + (right ? 12 : 0) * CELL, y: GRID.y + (top ? 2 : 10) * CELL, w: CELL, h: CELL, r }, k));
     }
     return out;
-  }
+  };
   function gridLines(p, alpha) {
     if (p <= 0 || alpha <= 0) return '';
     let o = `<g stroke="${WH}" stroke-width="1" opacity="${f(0.3 * alpha)}">`;
@@ -652,127 +676,131 @@
     });
     return o;
   }
-  function highlights(t, alpha) {
+  const hlCells = (form, a) => a <= 0 ? '' : (HL[form] || []).map(([c, r]) =>
+    `<rect x="${f(GRID.x + c * CELL)}" y="${f(GRID.y + r * CELL)}" width="${CELL}" height="${CELL}" fill="${ACCENT[form]}" fill-opacity="${f(0.18 * a)}" stroke="${ACCENT[form]}" stroke-opacity="${f(0.95 * a)}" stroke-width="1.5"/>`).join('');
+
+  // ---------- act 3: three grids side by side; 24 → logo; signet outlines; light pulse; fill; zoom out ----------
+  const GRID_KEYS = ['hitec', 'kramat', 'msway'];
+  const GRID_X = [[0, -320, -640], [1500, 320, 0], [3000, 1500, 640]];      // dx of each grid: before / after step 1 / after step 2
+  const gridDX = (i, t) => { const p1 = flow(seg(t, PH.slide, PH.slide + 1.0)), p2 = flow(seg(t, PH.slide + 0.85, PH.slide + 1.85));
+    const X = GRID_X[i]; return lerp(lerp(X[0], X[1], p1), X[2], p2); };
+  // signet shapes at grid scale: the ■ spans the grid edge to edge; the others keep the signet's proportions
+  const SIG_K = GRID.s / (96.24 * LS);
+  const sigBig = key => { const g = LK[SIG_OF[key]], w = g.w * SIG_K, h = g.h * SIG_K;
+    return { x: W / 2 - w / 2, y: H / 2 - h / 2, w, h, r: g.r.map(v => v * SIG_K), notch: g.notch || 0 }; };
+  const ANCHOR = { hitec: [0.5, 0.5], kramat: [0.5, 0.5], msway: [0.42, 0.37] };
+  function gridLogoL(key) {
+    const b = BRANDS[key], s = 46 / b.h, P = sigBig(key);
+    const ax = P.x + P.w * ANCHOR[key][0], ay = P.y + P.h * ANCHOR[key][1];
+    return { ox: ax - b.w * s / 2, oy: ay - b.h * s / 2, s, lh: b.h * s };
+  }
+  function actGrids(t) {
     let o = '';
-    const TF = TFS();
-    TF.forEach((x, i) => {
-      const form = FORMS[i + 1], end = TF[i + 1] !== undefined ? TF[i + 1] : PH.brands;
-      (HL[form] || []).forEach(([c, r], j) => {
-        const a = alpha * ease.out(seg(t, x + 0.6 + j * 0.015, x + 0.9 + j * 0.015)) * (1 - seg(t, end, end + 0.3));
-        if (a <= 0) return;
-        o += `<rect x="${f(GRID.x + c * CELL)}" y="${f(GRID.y + r * CELL)}" width="${CELL}" height="${CELL}" fill="${ACCENT[form]}" fill-opacity="${f(0.16 * a)}" stroke="${ACCENT[form]}" stroke-opacity="${f(0.95 * a)}" stroke-width="1.5"/>`;
-      });
+    const gA = 1 - seg(t, PH.outline + 0.9, PH.outline + 1.3);                 // grids fade once the outlines are drawn
+    GRID_KEYS.forEach((key, i) => {
+      const dx = gridDX(i, t);
+      if (dx > 1290) return;                                                   // fully off-frame
+      let g = '';
+      // lines (grid 0 draws on; the others arrive drawn)
+      g += gridLines(i === 0 ? seg(t, PH.grid, PH.grid + 1.0) : 1, gA);
+      // highlight cells: during the style run (grid 0), and all three together to compare
+      if (i === 0) TFS().forEach((x, j) => { const form = FORMS[j + 1], end = TFS()[j + 1] || PH.textOut;
+        g += hlCells(form, ease.out(seg(t, x + 0.6, x + 0.9)) * (1 - seg(t, end, end + 0.3))); });
+      g += hlCells(key, ease.out(seg(t, PH.compare, PH.compare + 0.4)) * (1 - seg(t, PH.logos, PH.logos + 0.4)));
+      // the 24: grid 0 morphs through the styles (and back to HI-TEC as it starts to slide); then each shrinks into its logo
+      let F;
+      if (i === 0) {
+        const TF = TFS(), started = TF.filter(x => t >= x).length;
+        F = started ? lerpForm(form24(gridName(FORMS[started - 1])), form24(FORMS[started]), flow(seg(t, TF[started - 1], TF[started - 1] + 0.8))) : form24('thinG');
+        F = lerpForm(F, form24('hitec'), flow(seg(t, PH.slide, PH.slide + 0.9)));
+      } else F = form24(key);
+      const L = gridLogoL(key), pL = flow(seg(t, PH.logos, PH.logos + 0.9));
+      const logoOut = flow(seg(t, PH.fill, PH.fill + 0.4));
+      if (i === 0 && t < PH.f1) {} // until the style run starts, act 1 still owns the 24
+      else if (t < PH.logos + 0.9) g += draw24(F, lerpP(P_GRID(), P_LOGO(key, L), pL), WH);
+      else g += logo(key, L, { nameIn: 1, nameOut: logoOut, digitsIn: 1, digitsOut: logoOut }, WH);
+      if (t >= PH.logos && t < PH.logos + 0.9) g += logo(key, L, { nameIn: seg(t, PH.logos + 0.35, PH.logos + 0.95), nameOut: 0, digitsIn: 0, digitsOut: 0 }, WH);
+      // markers: corner cells → the logo's markers; the left pair pops in
+      const kM = i === 0 ? ease.out(seg(t, PH.f1 + 0.35, PH.f1 + 0.8)) : 1;
+      let cm = i === 0 ? (() => { const TF = TFS(); let fa = 'hitec', fb = 'hitec', p = 0;
+        for (let j = 1; j < TF.length; j++) if (t >= TF[j]) { fa = FORMS[j]; fb = FORMS[j + 1]; p = flow(seg(t, TF[j], TF[j] + 0.8)); }
+        const back = flow(seg(t, PH.slide, PH.slide + 0.9));
+        return cornerMarkers(fa, fb, p, kM).map((m, j) => lerpGeom(m, cornerMarkers('hitec', 'hitec', 0, 1)[j], back)); })()
+        : cornerMarkers(key, key, 0, 1);
+      let mk = '';
+      const b = BRANDS[key];
+      if (kM > 0 && logoOut < 1) for (let sl = 0; sl < 6; sl++) {
+        const m = b.markers[sl];
+        let mg = markerGeom(key, sl, L);
+        if (m.col > 0) { const slot = m.col === 1 ? (m.top ? 0 : 1) : (m.top ? 2 : 3); mg = lerpGeom(cm[slot], mg, pL); }
+        else { const kk = ease.out(seg(t, PH.logos + 0.4 + sl * 0.03, PH.logos + 0.8 + sl * 0.03)); if (kk <= 0) continue; mg = scaleAbout(mg, kk); }
+        mk += shape(scaleAbout(mg, 1 - logoOut));
+      }
+      g += `<g fill="${WH}">${mk}</g>`;
+      // signet outline on the grid's edges; a pulse of light in the brand colour runs once around it; then it fills
+      const pd = flow(seg(t, PH.outline + i * 0.12, PH.outline + 0.9 + i * 0.12));
+      if (pd > 0 && t < PH.zoom) {
+        const d = outline(sigBig(key)), pp = seg(t, PH.pulse + i * 0.12, PH.pulse + 1.1 + i * 0.12), fl = seg(t, PH.fill + 0.15, PH.fill + 0.55);
+        g += `<path d="${d}" fill="${WH}" fill-opacity="${f(fl)}" stroke="${WH}" stroke-width="2" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
+        if (pp > 0 && pp < 1) {
+          const a = Math.sin(Math.PI * pp), off = -ease.io(pp);
+          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="10" stroke-linecap="round" opacity="${f(0.25 * a)}" pathLength="1" stroke-dasharray="0.14 0.86" stroke-dashoffset="${off.toFixed(4)}"/>`;
+          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="3" stroke-linecap="round" opacity="${f(a)}" pathLength="1" stroke-dasharray="0.1 0.9" stroke-dashoffset="${off.toFixed(4)}"/>`;
+        }
+      }
+      o += `<g transform="translate(${f(dx)} 0)">${g}</g>`;
+    });
+    // labels + caption around the first grid only, until the slide
+    const la = 1 - seg(t, PH.textOut, PH.textOut + 0.4);
+    o += gridLabels(t, la * ease.out(seg(t, PH.grid + 0.4, PH.grid + 1.0))) + caption(t, la);
+    return o;
+  }
+  // zoom out: the three filled shapes fly into the signet (● passes over and drops into its slot)
+  const expoIO = x => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2);
+  function actSignet(t) {
+    let o = '';
+    const pz = expoIO(seg(t, PH.zoom, PH.zoom + 1.1)), up = flow(seg(t, PH.rise, PH.rise + 0.9)) * FIN_DY;
+    GRID_KEYS.forEach((key, i) => {
+      const big = sigBig(key), dx = GRID_X[i][2];
+      const from = { ...big, x: big.x + dx }, to = shiftY(LK[SIG_OF[key]], up);
+      let g = lerpGeom(from, to, pz);
+      if (key === 'hitec') g = { ...g, y: g.y - 120 * Math.sin(Math.PI * clamp(pz * 1.15)) };
+      o += shape(g, ` fill="${WH}"`);
+    });
+    // the rest of the lockup flies in at the stop: GROUP + 24 from the left, the claim from the right
+    const pG = ease3(seg(t, PH.dock, PH.dock + 0.7)), pT = ease3(seg(t, PH.dock + 0.1, PH.dock + 0.8));
+    if (pG > 0) o += `<g transform="translate(${f(-(1 - pG) * 700)} ${f(up)}) ${lockT(0)}" fill="${WH}" opacity="${f(Math.min(1, pG * 3))}">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g>`;
+    if (pT > 0) o += `<g transform="translate(${f((1 - pT) * 500)} ${f(up)}) ${lockT(0)}" fill="${WH}" opacity="${f(Math.min(1, pT * 3))}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g>`;
+    // the three brand logos appear under it
+    const RL = rowLayout();
+    GRID_KEYS.forEach((key, i) => {
+      const k = seg(t, PH.rise + 0.4 + i * 0.12, PH.rise + 1.0 + i * 0.12);
+      if (k <= 0) return;
+      const L = RL[key];
+      o += logo(key, L, { nameIn: k, nameOut: 0, digitsIn: k, digitsOut: 0 }, WH);
+      let mk = ''; for (let sl = 0; sl < 6; sl++) mk += shape(scaleAbout(markerGeom(key, sl, L), ease.out(k)));
+      o += `<g fill="${WH}">${mk}</g>`;
     });
     return o;
   }
-  // the 24 on the grid, morphing form → form
-  function gridDigits(t) {
-    const TF = TFS(), started = TF.filter(x => t >= x).length;
-    if (!started) return draw24(form24('thinG'), P_GRID(), WH);
-    const p = flow(seg(t, TF[started - 1], TF[started - 1] + 0.9));
-    return draw24(lerpForm(form24(gridName(FORMS[started - 1])), form24(FORMS[started]), p), P_GRID(), WH);
-  }
-  function actGrid(t) {
-    const alpha = 1 - seg(t, PH.brands, PH.brands + 0.5);
-    let o = gridLines(seg(t, PH.grid, PH.grid + 1.0), alpha) + highlights(t, alpha) + gridLabels(t, alpha * ease.out(seg(t, PH.grid + 0.4, PH.grid + 1.0))) + caption(t, alpha);
-    if (t >= PH.f1 && t < PH.brands) o += gridDigits(t);
-    if (t < PH.brands) o += gridMarkers(t).map(m => shape(m.g, ` fill="${WH}"`)).join('');
-    return o;
-  }
-
-  // ---------- 4 + 5: outline shapes across the full width, logos inside; then the white group lockup ----------
-  const PANEL_H = 544, PANEL_GAP = 24;
-  const PANEL = (() => {
-    const ws = { hitec: 1, kramat: LK[0].w / LK[0].h, msway: LK[1].w / LK[1].h };
-    const total = ORDER.reduce((a, k) => a + ws[k] * PANEL_H, 0) + 2 * PANEL_GAP;
-    let x = W / 2 - total / 2; const out = {};
-    ORDER.forEach(k => { const g = LK[SIG_OF[k]], s = PANEL_H / g.h, w = ws[k] * PANEL_H;
-      out[k] = { x, y: H / 2 - PANEL_H / 2, w, h: PANEL_H, r: g.r.map(v => v * s), notch: g.notch || 0 }; x += w + PANEL_GAP; });
-    return out;
-  })();
-  const ANCHOR = { hitec: [0.5, 0.5], kramat: [0.5, 0.5], msway: [0.42, 0.37] };
-  function panelL(key) {
-    const b = BRANDS[key], s = 44 / b.h, P = PANEL[key];
-    const ax = P.x + P.w * ANCHOR[key][0], ay = P.y + P.h * ANCHOR[key][1];
-    return { ox: ax - b.w * s / 2, oy: ay - 50, s, lh: b.h * s };
-  }
-  // final row of full brand logos under the group lockup
+  // final row of brand logos under the group lockup
   const ROW_Y = 640;
   let ROWL = null;
   const rowLayout = () => ROWL || (ROWL = (() => { const s0 = 30, gap = 90, ws = ORDER.map(k => BRANDS[k].w * s0 / BRANDS[k].h), tot = ws.reduce((a, b) => a + b, 0) + gap * 2;
     let x = W / 2 - tot / 2; const out = {};
     ORDER.forEach((k, i) => { const s = s0 / BRANDS[k].h; out[k] = { ox: x, oy: ROW_Y - s0 / 2, s, lh: s0 }; x += ws[i] + gap; });
     return out; })());
-  const lerpL = (a, b, p) => ({ ox: lerp(a.ox, b.ox, p), oy: lerp(a.oy, b.oy, p), s: lerp(a.s, b.s, p), lh: lerp(a.lh, b.lh, p) });
-  function tag2(key, L, pin, pout, op = 1) {
-    const y0 = L.oy + L.lh + 34;
-    return TAG2[key].map((line, j) => rise(L.ox, y0 + j * 22,
-      `<text x="${f(L.ox)}" y="${f(y0 + j * 22)}" fill="${WH}" opacity="${f(0.9 * op)}" font-family="Inter" font-size="15" letter-spacing="4">${line}</text>`,
-      seg(pin, j * 0.15, 1), seg(pout, j * 0.1, 1), 22, 700)).join('');
-  }
-  function actBrands(t) {
-    let o = '';
-    const fin = PH.fin;
-    ORDER.forEach((key, i) => {
-      const b = BRANDS[key], P = PANEL[key], t0 = PH.brands + 0.15 + i * 0.45;
-      // outline draws on, then folds into the group signet and fills in
-      // fold in two clean steps: shrink in place to signet size, then glide (on a shallow arc) into the signet; fill last
-      const pd = flow(seg(t, t0, t0 + 1.0));
-      const ps = flow(seg(t, fin + 0.25, fin + 0.9)), pv = flow(seg(t, fin + 0.8, fin + 1.6));
-      const T = shiftY(LK[SIG_OF[key]], FIN_DY), k = T.h / P.h;
-      const small = { ...T, x: P.x + P.w / 2 - T.w / 2 };          // shrinks up onto the lockup line, clear of the logos
-      let g = lerpGeom(P, small, ps);
-      if (key === 'hitec') {
-        // ● lifts, travels above the others, then drops straight into its slot — no overlaps
-        const up = flow(seg(pv, 0, 0.3)) * (1 - flow(seg(pv, 0.7, 1)));
-        g = { ...lerpGeom(g, T, flow(seg(pv, 0.15, 0.75))), y: lerp(g.y, T.y, flow(seg(pv, 0.15, 0.75))) - 150 * up };
-      } else g = lerpGeom(g, T, pv);
-      o += `<path d="${outline(g)}" fill="${WH}" fill-opacity="${f(seg(t, fin + 1.55, fin + 1.8))}" stroke="${WH}" stroke-width="${f(lerp(2, 1.2, ps))}" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
-      // logo inside, white: digits (HI-TEC's arrive from the grid, morphing MS WAY → HI-TEC), markers, name; tagline
-      const LP = panelL(key), LR = rowLayout()[key], pr = flow(seg(t, fin, fin + 0.95));
-      const L = lerpL(LP, LR, pr);
-      const nameIn = seg(t, t0 + 0.55, t0 + 1.15), dIn = seg(t, t0 + 0.35, t0 + 0.95);
-      if (i === 0 && t < PH.brands + 1.1) {
-        const pg = flow(seg(t, PH.brands, PH.brands + 1.1));
-        o += draw24(lerpForm(form24('msway'), form24('hitec'), pg), lerpP(P_GRID(), P_LOGO(key, LP), pg), WH);
-        o += logo(key, L, { nameIn, nameOut: 0, digitsIn: 0, digitsOut: 0 }, WH);
-      } else o += logo(key, L, { nameIn, nameOut: 0, digitsIn: i === 0 ? 1 : dIn, digitsOut: 0 }, WH);
-      let mk = '';
-      const gm = i === 0 ? gridMarkers(t) : null;
-      for (let sl = 0; sl < 6; sl++) {
-        const m = b.markers[sl];
-        let mg = markerGeom(key, sl, L);
-        if (i === 0 && m.col > 0) { const slot = m.col === 1 ? (m.top ? 0 : 1) : (m.top ? 2 : 3); mg = lerpGeom(gm[slot].g, mg, flow(seg(t, PH.brands, PH.brands + 1.1))); }
-        else { const kk = ease.out(seg(t, t0 + 0.4 + sl * 0.03, t0 + 0.8 + sl * 0.03)); if (kk <= 0) continue; mg = scaleAbout(mg, kk); }
-        mk += shape(mg);
-      }
-      o += `<g fill="${WH}">${mk}</g>`;
-      o += tag2(key, LP, seg(t, t0 + 0.75, t0 + 1.35), seg(t, fin, fin + 0.35));
-    });
-    // finale: GROUP + the thin 24 pulled out of the ■, the tagline out of the ● — white, a little higher
-    const sq = shiftY(LK[0], FIN_DY), ci = shiftY(LK[2], FIN_DY);
-    const pG = flow(seg(t, fin + 1.45, fin + 2.25)), pT = flow(seg(t, fin + 1.55, fin + 2.35));
-    if (pG > 0) {
-      const push = (sq.x - GROUP_L) * (1 - pG);
-      o += `<clipPath id="fg"><rect x="-400" y="0" width="${f(sq.x + 400)}" height="${H}"/></clipPath><g clip-path="url(#fg)"><g transform="translate(${f(push)} 0) ${lockT(FIN_DY)}" fill="${WH}">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g></g>`;
-    }
-    if (pT > 0) {
-      const push = (TAG_R - (ci.x + ci.w)) * (1 - pT);
-      o += `<clipPath id="ft"><rect x="${f(ci.x + ci.w)}" y="0" width="${W}" height="${H}"/></clipPath><g clip-path="url(#ft)"><g transform="translate(${f(-push)} 0) ${lockT(FIN_DY)}" fill="${WH}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
-    }
-    return o;
-  }
 
   const zoomAbout = (dx, s, cx = W / 2, cy = H / 2) => `translate(${f(dx + cx)} ${f(cy)}) scale(${s.toFixed(5)}) translate(${-cx} ${-cy})`;
-  const camR = t => 1 + 0.02 * (t / PH.end);
+  // camera: a gentle zoom-out through the opening, then a very slow drift
+  const camR = t => (t < PH.full ? lerp(1.06, 1.0, flow(seg(t, 0, PH.full))) : 1 + 0.015 * seg(t, PH.full, PH.end));
   function reveal(t) {
     clipId = 0;
     let body = '';
-    // after the plate fills the frame, the footage is the background
-    if (t >= PH.full + 0.9) body += footage(t);
+    if (t >= PH.full + 0.95) body += footage(t);
     if (t < PH.f1 + 0.01) body += actOpen(t);
-    if (t >= PH.grid) body += actGrid(t);
-    if (t >= PH.brands) body += actBrands(t);
+    if (t >= PH.grid && t < PH.zoom + 0.01) body += actGrids(t);
+    if (t >= PH.zoom) body += actSignet(t);
     return svgWrap(defs() + `<rect width="${W}" height="${H}" fill="#fff"/><g transform="${zoomAbout(0, camR(t))}">${body}</g>`);
   }
 
