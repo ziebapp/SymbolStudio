@@ -78,21 +78,22 @@ Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfiel
 | C7 | 14–17 | **H3** + MS WAY 24 |
 | C8 | 17–20 | Ujęcie zapada się w kwadrat ■ → A16–A18 (GROUP 24 wyciągany z kwadratu) |
 
-## D. Reveal wg Figmy — `out/reveal.mp4` (20,6 s, 16:9, 60 fps)
+## D. Reveal wg Figmy — `out/reveal.mp4` (12,3 s, 16:9, 60 fps)
 
 Źródło: Figma `5om0DyfMnKFfTDrbqGwGy2`, node `1:57`. Zdjęcie: `img/photo.jpg`, złożone ze screenshotów Figmy (narożniki domalowane). Do podmiany na oryginał.
+Ruch jest ciągły, bez holdów: każda faza startuje, zanim skończy się poprzednia, a easing to cubic in-out z krótkimi ogonami. Kamera przez cały czas powoli dojeżdża (+5%).
 
 | # | Czas | Kadr |
 |---|---|---|
-| D1 | 0,0–1,2 | Lockup GROUP 24; ▛ i ● wjeżdżają do ■ (szarzeją), ■ poszerza się, hasło jedzie w lewo |
-| D2 | 1,15–2,0 | ■ rośnie w pasek ze zdjęciem i połyka cienkie „24” (biel w środku); GROUP jest wypychany w lewo |
-| D3 | 2,4–3,3 | Pasek → kwadratowa apla, „24” skaluje się na siatkę 13×13, hasło idzie na prawą kolumnę |
-| D4 | 3,9 / 5,1 / 6,3 | Zmiana formy „24”: komórki siatki zalewają cyfry i odsłaniają nową formę; apla zmienia narożniki (KRAMAT – ścięte, MS WAY – zaokrąglone, HI-TEC – koło + kropki). Tekst: hasło → 3 BRANDS → 3 STYLES |
-| D5 | 7,6–8,9 | „24” leci w prawo i rozciąga aplę w pigułkę na cały kadr; wjeżdża HI-TEC w dużej skali |
-| D6 | 9,4–10,4 | Logo skaluje się do formy finalnej; zdjęcie → gradient HI-TEC, apla wsuwa się w kadr |
-| D7 | 11,4 / 13,6 | Slider: KRAMAT, potem MS WAY. Tło, apla i logo jadą osobno (opóźnienie 0 / 0,08 / 0,2 s), apla i logo „odpływają” w głąb (skala −8,5%) |
-| D8 | 15,8–17,9 | Apla MS WAY zapada się w ▛ (tło razem z nią), z ▛ wyrastają ■ (KRAMAT) i ● (HI-TEC), z ■ wyciągany GROUP 24, z ● hasło |
-| D9 | 18,35–20,6 | Kolory → czerń, lockup zmniejsza się do 46% |
+| D1 | 0,1–0,9 | Lockup GROUP 24; ▛ i ● wjeżdżają do ■ (szarzeją), ■ poszerza się, hasło jedzie w lewo |
+| D2 | 0,7–1,6 | ■ rośnie w pasek ze zdjęciem i połyka cienkie „24” (biel w środku); GROUP jest wypychany w lewo |
+| D3 | 1,4–2,6 | Pasek → kwadratowa apla, „24” skaluje się na siatkę 13×13, hasło idzie na prawą kolumnę |
+| D4 | 2,45 / 3,15 / 3,85 | Zmiana formy „24”: komórki siatki zalewają cyfry i odsłaniają nową formę; apla zmienia narożniki (KRAMAT – ścięte, MS WAY – zaokrąglone, HI-TEC – koło + kropki). Tekst: hasło → 3 BRANDS → 3 STYLES |
+| D5 | 4,55–5,85 | „24” leci w prawo i rozciąga aplę w pigułkę na cały kadr; wjeżdża HI-TEC w dużej skali |
+| D6 | 5,4–6,45 | Logo skaluje się do formy finalnej; zdjęcie → gradient HI-TEC, apla wsuwa się w kadr |
+| D7 | 6,25 / 7,35 | Ciągły slider: KRAMAT, potem MS WAY. Tło, apla i logo jadą osobno (opóźnienie 0 / 0,08 / 0,2 s), apla i logo „odpływają” w głąb (skala −8,5%) |
+| D8 | 8,5–10,65 | Apla MS WAY zapada się w ▛ (tło razem z nią), z ▛ wyrastają ■ (KRAMAT) i ● (HI-TEC), z ■ wyciągany GROUP 24, z ● hasło |
+| D9 | 10,5–11,8 | Kolory → czerń, lockup zmniejsza się do 46% |
 
 ---
 

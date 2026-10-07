@@ -412,8 +412,10 @@
   // → GROUP 24 lockup in sub-brand colours → black, small.
   // =====================================================================
   const K = 0.5523; // cubic handle length for a quarter circle
-  const PH = { merge: 0.5, strip: 1.15, square: 2.4, f1: 3.9, f2: 5.1, f3: 6.3, fly: 7.6, name: 7.95, down: 9.4,
-               s1: 11.4, s2: 13.6, out: 15.8, end: 20.6 };
+  // no holds: every phase starts while the previous one is still moving
+  const PH = { merge: 0.1, strip: 0.7, square: 1.4, f1: 2.45, f2: 3.15, f3: 3.85, fly: 4.55, name: 4.85, down: 5.4,
+               s1: 6.25, s2: 7.35, out: 8.5, end: 12.3 };
+  const flow = x => (x < 0.5 ? 4 * x ** 3 : 1 - Math.pow(-2 * x + 2, 3) / 2); // cubic in-out: short tails, chains without stalls
   const BOX = { x: 265, y: 396, w: 632, h: 287 };           // the 24 on the grid (two 5×5-cell digits)
   const GRID = { x: 208, y: 166, s: 747, n: 13 };
   const CELL = GRID.s / GRID.n;
@@ -505,7 +507,7 @@
     BITS.forEach((rows, dg) => rows.forEach((row, r) => [...row].forEach((v, c) => {
       if (v !== '1') return;
       const lag = (dg * 5 + c) * 0.018 + r * 0.01;
-      const g = ease.out(seg(t, t0 + lag, t0 + 0.2 + lag)), s = ease.io(seg(t, t0 + 0.3 + lag, t0 + 0.5 + lag));
+      const g = ease.out(seg(t, t0 + lag, t0 + 0.2 + lag)), s = flow(seg(t, t0 + 0.3 + lag, t0 + 0.5 + lag));
       const k = g * (1 - s); if (k <= 0) return;
       const sz = (CELL + 1) * k, cx = BOX.x + dg * 345 + (c + 0.5) * CELL, cy = BOX.y + (r + 0.5) * CELL;
       o += `<rect x="${f(cx - sz / 2)}" y="${f(cy - sz / 2)}" width="${f(sz)}" height="${f(sz)}"/>`;
@@ -527,7 +529,7 @@
     const blocks = [{ tag: true, in: -9, out: PH.f1 }, { txt: '3 BRANDS', in: PH.f1, out: PH.f3 }, { txt: '3 STYLES', in: PH.f3, out: PH.fly }];
     let o = `<clipPath id="rt"><rect x="1150" y="470" width="800" height="142"/></clipPath><g clip-path="url(#rt)" fill="#0a0a0a">`;
     for (const b of blocks) {
-      const pin = ease.out(seg(t, b.in + 0.2, b.in + 0.8)), pout = ease.io(seg(t, b.out, b.out + 0.4));
+      const pin = ease.out(seg(t, b.in + 0.2, b.in + 0.8)), pout = flow(seg(t, b.out, b.out + 0.4));
       if (pin <= 0 || pout >= 1) continue;
       const dy = (1 - pin) * 130 - pout * 130;
       o += b.tag ? `<g transform="translate(${f(tagX - TAG_X)} ${f(405 + dy)})">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g>`
@@ -538,12 +540,12 @@
 
   // ---------- part 1: lockup → strip → square grid → 3 forms → HI-TEC ----------
   function revealIntro(t) {
-    const pm = ease.io(seg(t, PH.merge, PH.merge + 0.7));
-    const pB = ease.io(seg(t, PH.strip, PH.strip + 0.85));
-    const pC = ease.io(seg(t, PH.square, PH.square + 0.9));
-    const pE = ease.io(seg(t, PH.fly, PH.fly + 1.0));
-    const pN = ease.out(seg(t, PH.name, PH.name + 0.95));
-    const pD = ease.io(seg(t, PH.down, PH.down + 1.0));
+    const pm = flow(seg(t, PH.merge, PH.merge + 0.8));
+    const pB = flow(seg(t, PH.strip, PH.strip + 0.9));
+    const pC = flow(seg(t, PH.square, PH.square + 1.0));
+    const pE = flow(seg(t, PH.fly, PH.fly + 1.0));
+    const pN = ease.out(seg(t, PH.name, PH.name + 1.0));
+    const pD = flow(seg(t, PH.down, PH.down + 1.05));
     const FORMS = ['rect', 'kramat', 'msway', 'hitec'], TF = [PH.f1, PH.f2, PH.f3];
     const formIdx = TF.filter(x => t >= x + 0.31).length, form = FORMS[formIdx];
 
@@ -551,7 +553,7 @@
     let g = toAp(lerpGeom(LK[0], MERGED, pm));
     g = lerpAp(g, { ...STRIP, c: CORNERS.rect }, pB);
     g = lerpAp(g, { ...SQ, c: CORNERS.rect }, pC);
-    TF.forEach((x, i) => { g = lerpAp(g, { ...g, c: CORNERS[FORMS[i + 1]] }, ease.io(seg(t, x, x + 0.6))); });
+    TF.forEach((x, i) => { g = lerpAp(g, { ...g, c: CORNERS[FORMS[i + 1]] }, flow(seg(t, x, x + 0.75))); });
     g = lerpAp(g, FULLPILL, pE);
     g = lerpAp(g, SLIDE.hitec, pD);
 
@@ -571,16 +573,16 @@
     o += ap(g, ` fill="url(#ag_hitec)" opacity="${f(seg(t, PH.down + 0.2, PH.down + 0.9))}"`);
     // signet ▛ and ● tuck into the ■ (turning grey), then dissolve as the strip opens
     if (t < PH.strip + 0.5) {
-      const q = 1 - ease.io(seg(t, PH.strip, PH.strip + 0.45));
+      const q = 1 - flow(seg(t, PH.strip, PH.strip + 0.45));
       [1, 2].forEach(i => {
-        const p = ease.io(seg(t, PH.merge + (i - 1) * 0.1, PH.merge + 0.6 + (i - 1) * 0.1));
+        const p = flow(seg(t, PH.merge + (i - 1) * 0.1, PH.merge + 0.6 + (i - 1) * 0.1));
         const s = lerpGeom(LK[i], TUCK[i], p), cx = s.x + s.w / 2, cy = s.y + s.h / 2;
         const sc = { ...s, x: cx - s.w * q / 2, y: cy - s.h * q / 2, w: s.w * q, h: s.h * q, r: s.r.map(v => v * q) };
         if (q > 0) o += shape(sc, ` fill="${rgb(mixC(INK, [207, 207, 207], seg(p, 0.35, 1)))}"`);
       });
     }
     // construction grid
-    o += `<g clip-path="url(#pl)">${gridLines(seg(t, PH.square + 0.45, PH.square + 1.25), 1 - seg(t, PH.fly, PH.fly + 0.4))}</g>`;
+    o += `<g clip-path="url(#pl)">${gridLines(seg(t, PH.square + 0.4, PH.square + 1.2), 1 - seg(t, PH.fly, PH.fly + 0.4))}</g>`;
 
     // the 24 itself (white inside the plate)
     let w24 = '';
@@ -627,15 +629,16 @@
   }
   const zoomAbout = (dx, s, cx = W / 2, cy = H / 2) => `translate(${f(dx + cx)} ${f(cy)}) scale(${s.toFixed(5)}) translate(${-cx} ${-cy})`;
   function revealSlider(t) {
-    const second = t >= PH.s2, ts = second ? PH.s2 : PH.s1;
-    const [from, to] = second ? ['kramat', 'msway'] : ['hitec', 'kramat'];
-    const DA = 1800;
-    const ub = ease.io(seg(t, ts, ts + 0.9)), ua = ease.io(seg(t, ts + 0.08, ts + 1.0)), ul = ease.io(seg(t, ts + 0.2, ts + 1.15));
-    const depth = u => 1 - 0.085 * Math.sin(Math.PI * u);
-    let o = bgRect(from, ub * W) + bgRect(to, (ub - 1) * W);
-    [[from, ua, ul], [to, ua - 1, ul - 1]].forEach(([key, a, l], i) => {
-      const sA = depth(ua), sL = depth(ul);
-      const tA = zoomAbout(a * DA, sA), tL = zoomAbout(l * DA, sL);
+    // slide i sits at offset (U - i) × distance; U sums both transitions, so the move never resets
+    const TS = [PH.s1, PH.s2], DA = 1800;
+    const U = (d0, d1) => TS.reduce((acc, ts) => acc + flow(seg(t, ts + d0, ts + d1)), 0);
+    const dip = (d0, d1) => 1 - 0.085 * TS.reduce((acc, ts) => acc + Math.sin(Math.PI * flow(seg(t, ts + d0, ts + d1))), 0);
+    const ub = U(0, 0.9), ua = U(0.08, 1.0), ul = U(0.2, 1.15), sA = dip(0.08, 1.0), sL = dip(0.2, 1.15);
+    let o = '';
+    ORDER.forEach((key, i) => { if (Math.abs(ub - i) < 1) o += bgRect(key, (ub - i) * W); });
+    ORDER.forEach((key, i) => {
+      if (Math.abs(ua - i) >= 1 && Math.abs(ul - i) >= 1) return;
+      const tA = zoomAbout((ua - i) * DA, sA), tL = zoomAbout((ul - i) * DA, sL);
       o += `<clipPath id="sc${i}"><path transform="${tA}" d="${apPath(SLIDE[key])}"/></clipPath>`;
       o += `<path transform="${tA}" d="${apPath(SLIDE[key])}" fill="url(#ag_${key})"/>`;
       o += `<g clip-path="url(#sc${i})"><g transform="${tL}">${brandLogo(key, '#fff')}</g></g>`;
@@ -646,10 +649,10 @@
   // ---------- part 3: last plate becomes ▛, ■ and ● grow out of it, GROUP 24 is pulled out ----------
   function revealOutro(t) {
     const T0 = PH.out, L = finalLayout('msway');
-    const pB = ease.io(seg(t, T0, T0 + 0.6)), pA = ease.io(seg(t, T0 + 0.15, T0 + 1.05));
-    const pSq = ease.io(seg(t, T0 + 0.85, T0 + 1.45)), pCi = ease.io(seg(t, T0 + 0.95, T0 + 1.55));
-    const pG = ease.io(seg(t, T0 + 1.25, T0 + 2.05)), pT = ease.io(seg(t, T0 + 1.35, T0 + 2.15));
-    const pK = ease.io(seg(t, T0 + 2.55, T0 + 3.2)), pS = ease.io(seg(t, T0 + 2.7, T0 + 3.6));
+    const pB = flow(seg(t, T0, T0 + 0.6)), pA = flow(seg(t, T0 + 0.15, T0 + 1.05));
+    const pSq = flow(seg(t, T0 + 0.85, T0 + 1.45)), pCi = flow(seg(t, T0 + 0.95, T0 + 1.55));
+    const pG = flow(seg(t, T0 + 1.25, T0 + 2.05)), pT = flow(seg(t, T0 + 1.35, T0 + 2.15));
+    const pK = flow(seg(t, T0 + 2.0, T0 + 2.7)), pS = flow(seg(t, T0 + 2.1, T0 + 3.3));
     const plate = lerpAp(SLIDE.msway, toAp(LK[1]), pA);
     let o = `<rect width="${W}" height="${H}" fill="#fff"/>`;
     let inner = '';
@@ -662,7 +665,7 @@
     // the MS WAY logo retracts; its markers fold into the ▛
     inner += logo('msway', L, { nameIn: 1, nameOut: seg(t, T0, T0 + 0.4), digitsIn: 1, digitsOut: seg(t, T0, T0 + 0.35) }, '#fff');
     for (let sl = 0; sl < 6; sl++) {
-      const p = ease.io(seg(t, T0 + 0.05 + sl * 0.02, T0 + 0.85 + sl * 0.02));
+      const p = flow(seg(t, T0 + 0.05 + sl * 0.02, T0 + 0.85 + sl * 0.02));
       if (p < 1) inner += shape(lerpGeom(markerGeom('msway', sl, L), LK[1], p), ` fill="#fff" opacity="${f(1 - seg(p, 0.6, 1))}"`);
     }
     // GROUP 24 out of the ■ (clipped left of it), tagline out of the ● (clipped right of it)
@@ -677,16 +680,7 @@
     return o + `<g transform="${zoomAbout(0, lerp(1, 0.4625, pS))}">${inner}</g>`;
   }
 
-  const CAMR = [[0, 1], [PH.merge, 1.02], [PH.merge + 0.7, 1], [PH.square, 1.025], [PH.square + 0.9, 1], [PH.fly, 1.03], [PH.fly + 1.0, 1],
-                [PH.down, 1.025], [PH.down + 1.0, 1], [PH.s1, 1.03], [PH.s1 + 1.1, 1], [PH.s2, 1.03], [PH.s2 + 1.1, 1], [PH.out, 1.03],
-                [PH.out + 1.0, 1], [PH.out + 2.7, 1.02], [PH.out + 3.6, 1], [PH.end, 1.03]];
-  function camR(t) {
-    for (let i = 1; i < CAMR.length; i++) if (t <= CAMR[i][0]) {
-      const [a, sa] = CAMR[i - 1], [b, sb] = CAMR[i]; const p = seg(t, a, b);
-      return lerp(sa, sb, p * p * (3 - 2 * p));
-    }
-    return CAMR[CAMR.length - 1][1];
-  }
+  const camR = t => 1 + 0.05 * (t / PH.end); // one slow continuous push-in over the whole piece
   function reveal(t) {
     clipId = 0;
     const body = t >= PH.out ? revealOutro(t) : t >= PH.s1 ? revealSlider(t) : revealIntro(t);
