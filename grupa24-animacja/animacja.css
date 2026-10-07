@@ -1,0 +1,49 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #111; overflow: hidden; }
+body { font: 13px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; color: #eee; }
+
+.viewport { position: fixed; inset: 0; }
+.stage {
+  position: absolute; left: 0; top: 0;
+  width: 1840px; height: 928px;
+  transform-origin: 0 0;
+  background: #fff;
+  overflow: hidden;
+}
+
+.video-layer { position: absolute; inset: 0; will-change: clip-path; }
+.video-inner { position: absolute; left: 0; top: 0; width: 1840px; height: 928px; transform-origin: 0 0; will-change: transform; }
+.video-inner img,
+.video-inner video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.video-inner video { opacity: 0; }
+.video-inner.has-video video { opacity: 1; }
+.video-inner.has-video img { visibility: hidden; }
+/* Zdjęcie/wideo przyciemnione jak w Figmie (50% czerni) */
+.shade { position: absolute; inset: 0; background: rgba(0, 0, 0, .5); }
+
+.overlay { position: absolute; inset: 0; overflow: visible; }
+.fade { position: absolute; inset: 0; background: #fff; pointer-events: none; }
+
+/* Pasek sterowania */
+.ui {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  width: min(920px, calc(100vw - 32px));
+  padding: 10px 14px; border-radius: 12px;
+  background: rgba(20, 20, 20, .82); backdrop-filter: blur(8px);
+  transition: opacity .3s;
+}
+.ui.idle { opacity: 0; }
+.ui button {
+  flex: none; width: 34px; height: 30px; border: 0; border-radius: 8px;
+  background: #fff; color: #111; font-size: 13px; cursor: pointer;
+}
+.ui input[type=range] { flex: 1; min-width: 80px; accent-color: #ff7124; }
+#time { flex: none; width: 58px; font-variant-numeric: tabular-nums; color: #bbb; }
+.marks { display: flex; gap: 3px; flex: none; }
+.marks button { width: 22px; height: 22px; padding: 0; border-radius: 6px; background: #333; color: #ccc; font-size: 11px; }
+.marks button.on { background: #ff7124; color: #111; }
+@media (max-width: 700px) { .marks { display: none; } }
+
+body.clean .ui { display: none; }
+body.clean { cursor: none; }

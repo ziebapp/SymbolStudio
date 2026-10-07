@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRUPA 24 — animacja logo</title>
+<link rel="stylesheet" href="animacja.css">
+</head>
+<body>
+<div class="viewport">
+  <div class="stage" id="stage">
+    <!-- Warstwa wideo: przycinana kształtem (clip-path) liczonym co klatkę -->
+    <div class="video-layer" id="vlayer">
+      <div class="video-inner" id="vinner">
+        <img src="assets/truck.jpg" alt="">
+        <div class="shade"></div>
+      </div>
+    </div>
+
+    <svg class="overlay" id="overlay" viewBox="0 0 1840 928" width="1840" height="928" aria-label="GRUPA 24">
+      <defs id="defs"></defs>
+      <g id="lines" fill="none" stroke-width="1.2"></g>
+      <g id="ghosts"></g>
+      <g id="mark"></g>
+      <g id="brands"></g>
+    </svg>
+
+    <div class="fade" id="fade"></div>
+  </div>
+</div>
+
+<div class="ui" id="ui">
+  <button id="play" type="button" title="Odtwórz / pauza (spacja)">❚❚</button>
+  <input id="scrub" type="range" min="0" max="30" step="0.01" value="0" aria-label="Oś czasu">
+  <span id="time">0.00 s</span>
+  <div class="marks" id="marks" title="Skok do klatki z Figmy (← →)"></div>
+</div>
+
+<script src="logo-data.js"></script>
+<script src="animacja.js"></script>
+</body>
+</html>
