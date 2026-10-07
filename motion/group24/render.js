@@ -19,7 +19,11 @@ const fs = require('fs'), path = require('path');
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   await page.goto('file://' + path.join(__dirname, 'render.html'));
   const dur = await page.evaluate(s => G24.SCENES[s].dur, scene);
-  const draw = t => page.evaluate(([s, t]) => { document.body.innerHTML = G24.frame(s, t); }, [scene, t]);
+  // set the frame, then wait until any <image> (footage stills) is decoded so no frame renders empty
+  const draw = t => page.evaluate(async ([s, t]) => {
+    document.body.innerHTML = G24.frame(s, t);
+    await Promise.all([...document.querySelectorAll('image')].map(i => (i.decode ? i.decode() : Promise.resolve()).catch(() => {})));
+  }, [scene, t]);
 
   if (stills) {
     for (const t of stills) {

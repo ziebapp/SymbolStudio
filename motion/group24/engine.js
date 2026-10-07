@@ -26,6 +26,11 @@
   const mixC = (a, b, p) => a.map((v, i) => lerp(v, b[i], p));
   const f = n => +n.toFixed(2);
 
+  const bboxOf = qs => {
+    const x0 = Math.min(...qs.map(q => q.x)), y0 = Math.min(...qs.map(q => q.y));
+    return { x: x0, y: y0, w: Math.max(...qs.map(q => q.x + q.w)) - x0, h: Math.max(...qs.map(q => q.y + q.h)) - y0 };
+  };
+
   // ---------- parse brand SVGs ----------
   function parseBrands() {
     const host = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -71,6 +76,7 @@
       });
       const nx = b.name.map(q => q.x), nr = b.name.map(q => q.x + q.w);
       b.nameBox = [Math.min(...nx) - 4, Math.max(...nr) + 4];
+      b.dbb = bboxOf(b.digits); b.nbb = bboxOf(b.name);
     }
     host.remove();
   }
@@ -129,6 +135,8 @@
     const x0 = d => parseFloat(d.slice(1));
     GRP.word = ds.filter(d => x0(d) < 520 || (x0(d) > 520 && x0(d) < 720));   // GROUP + thin "24"
     GRP.tag = ds.filter(d => x0(d) > 1080);
+    GRP.grp = ds.filter(d => x0(d) < 520);                     // GROUP
+    GRP.d24 = ds.filter(d => x0(d) > 520 && x0(d) < 720);      // thin "24"
     GRP.ox = W / 2 - 696.5 * GS; GRP.oy = CY - 135.6 * GS;
     GRP.dx = W / 2 - (GRP.ox + 901.85 * GS); // shift that centres the signet alone
   }
@@ -395,8 +403,299 @@
     return svgWrap(bg + camWrap(camAt(t), o));
   }
 
+  // =====================================================================
+  // SCENE: reveal (Figma storyboard) — GROUP 24 lockup → signet folds into one block →
+  // block grows into a photo strip, then a square on the construction grid → the "24" cycles
+  // through its forms (group / KRAMAT / MS WAY / HI-TEC) → the HI-TEC 24 flies right, stretching
+  // its plate, and the name rides in → logo settles, plate turns brand colour → KRAMAT and
+  // MS WAY slide in (staggered layers, parallax) → last plate becomes ▛, ■ and ● grow out of it
+  // → GROUP 24 lockup in sub-brand colours → black, small.
+  // =====================================================================
+  const K = 0.5523; // cubic handle length for a quarter circle
+  const PH = { merge: 0.5, strip: 1.15, square: 2.4, f1: 3.9, f2: 5.1, f3: 6.3, fly: 7.6, name: 7.95, down: 9.4,
+               s1: 11.4, s2: 13.6, out: 15.8, end: 20.6 };
+  const BOX = { x: 265, y: 396, w: 632, h: 287 };           // the 24 on the grid (two 5×5-cell digits)
+  const GRID = { x: 208, y: 166, s: 747, n: 13 };
+  const CELL = GRID.s / GRID.n;
+  const FLY = 770;                                          // how far the 24 travels right
+  const SQ = { x: 33, y: 39, w: 1098, h: 1003 };
+  const STRIP = { x: 461, y: 471, w: 705, h: 141 };
+  const INSET = { x: 123, y: 89, w: 1674, h: 903 };
+  const PHOTO_SQ = [-45, -399];                             // photo offset while the plate is square
+  const D24 = { x: 543.47, y: 101.83, w: 167.96, h: 69.82 }; // thin 24 inside group24.svg
+  const TAG_X = 1090.19;                                    // tagline left edge inside group24.svg
+
+  const C0 = { dx: 0, dy: 0, k: 0 };
+  const cr = (d, k = K) => ({ dx: d, dy: d, k });
+  const CORNERS = {
+    rect: [C0, C0, C0, C0],
+    kramat: [C0, cr(185, 0), C0, cr(185, 0)],               // chamfered TR / BL
+    msway: [cr(64), cr(64), cr(64), cr(64)],
+    hitec: [0, 1, 2, 3].map(() => ({ dx: SQ.w / 2, dy: SQ.h / 2, k: K })),
+  };
+  const pill = b => [0, 1, 2, 3].map(() => cr(Math.min(b.w, b.h) / 2));
+  const FULLPILL = { x: 0, y: 0, w: W, h: H, c: pill({ w: W, h: H }) };
+  const SLIDE = {
+    hitec: { ...INSET, c: pill(INSET) },
+    kramat: { ...INSET, c: CORNERS.rect },
+    msway: { ...INSET, c: [0, 1, 2, 3].map(() => cr(150)) },
+  };
+  const lerpAp = (a, b, p) => ({
+    x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p), w: lerp(a.w, b.w, p), h: lerp(a.h, b.h, p),
+    c: a.c.map((q, i) => ({ dx: lerp(q.dx, b.c[i].dx, p), dy: lerp(q.dy, b.c[i].dy, p), k: lerp(q.k, b.c[i].k, p) })),
+    notch: lerp(a.notch || 0, b.notch || 0, p),
+  });
+  const toAp = g => ({ x: g.x, y: g.y, w: g.w, h: g.h, c: g.r.map(r => cr(r)), notch: g.notch || 0 });
+  // plate outline: per corner a cubic from edge to edge; k = 0 → chamfer, k = K → round, d = 0 → sharp
+  function apPath(g) {
+    const { x, y, w, h } = g; if (w < 0.01 || h < 0.01) return '';
+    const [tl, tr, br, bl] = g.c.map(q => ({ dx: clamp(q.dx, 0, w / 2), dy: clamp(q.dy, 0, h / 2), k: q.k }));
+    const cub = (a, c, b, k) => `C${f(a[0] + (c[0] - a[0]) * k)} ${f(a[1] + (c[1] - a[1]) * k)} ${f(b[0] + (c[0] - b[0]) * k)} ${f(b[1] + (c[1] - b[1]) * k)} ${f(b[0])} ${f(b[1])}`;
+    let d = `M${f(x + tl.dx)} ${f(y)}L${f(x + w - tr.dx)} ${f(y)}` + cub([x + w - tr.dx, y], [x + w, y], [x + w, y + tr.dy], tr.k);
+    d += `L${f(x + w)} ${f(y + h - br.dy)}` + cub([x + w, y + h - br.dy], [x + w, y + h], [x + w - br.dx, y + h], br.k);
+    d += `L${f(x + bl.dx)} ${f(y + h)}` + cub([x + bl.dx, y + h], [x, y + h], [x, y + h - bl.dy], bl.k);
+    d += `L${f(x)} ${f(y + tl.dy)}` + cub([x, y + tl.dy], [x, y], [x + tl.dx, y], tl.k) + 'Z';
+    const n = seg(g.notch || 0, 0.6, 1);
+    if (n > 0.001) {
+      const nx = x + w * (1 - 0.564 * n), ny = y + h * (1 - 0.541 * n);
+      d += `M${f(nx)} ${f(ny)}H${f(x + w)}V${f(y + h)}H${f(nx)}Z`;
+    }
+    return d;
+  }
+  const ap = (g, extra = '') => `<path fill-rule="evenodd" d="${apPath(g)}"${extra}/>`;
+
+  // group lockup at Figma position (svg origin 251,405, scale 1)
+  const LK = [
+    { x: 1013.38, y: 503.05, w: 96.24, h: 77.37, r: [0, 0, 0, 0] },
+    { x: 1122.91, y: 501.98, w: 81.78, h: 77.81, r: [35.19, 0, 0, 0], notch: 1 },
+    { x: 1210.87, y: 499.92, w: 81.46, h: 81.46, r: [40.73, 40.73, 40.73, 40.73] },
+  ];
+  const MERGED = { x: 1013, y: 503, w: 153, h: 77, r: [0, 0, 0, 0] };
+  const TUCK = [null, { x: 1021.78, y: 510.34, w: 64.22, h: 61.1, r: [27.6, 0, 0, 0], notch: 1 },
+                      { x: 1033, y: 512, w: 57, h: 57, r: [28.5, 28.5, 28.5, 28.5] }];
+
+  const finalLayout = key => { const b = BRANDS[key], s = 98.4 / b.h; return { ox: W / 2 - b.w * s / 2, oy: H / 2 - b.h * s / 2, s }; };
+  const fitT = (bb, box) => { const s = Math.min(box.w / bb.w, box.h / bb.h);
+    return { s, tx: box.x + (box.w - bb.w * s) / 2 - bb.x * s, ty: box.y + (box.h - bb.h * s) / 2 - bb.y * s }; };
+  const lerpT = (a, b, p) => ({ s: lerp(a.s, b.s, p), tx: lerp(a.tx, b.tx, p), ty: lerp(a.ty, b.ty, p) });
+  const paths = (qs, color) => qs.map(q => `<path d="${q.d}"${q.stroke ? ` stroke="${color}" stroke-width="${q.stroke}"` : ''}/>`).join('');
+  const thin24 = (box, color) => `<g transform="translate(${f(box.x - D24.x * box.w / D24.w)} ${f(box.y - D24.y * box.h / D24.h)}) scale(${(box.w / D24.w).toFixed(5)} ${(box.h / D24.h).toFixed(5)})" fill="${color}">${GRP.d24.map(d => `<path d="${d}"/>`).join('')}</g>`;
+  const brand24 = (key, T, color) => `<g transform="translate(${f(T.tx)} ${f(T.ty)}) scale(${T.s.toFixed(5)})" fill="${color}">${paths(BRANDS[key].digits, color)}</g>`;
+
+  function defs() {
+    let o = '<defs>';
+    for (const k of ORDER) o += `<linearGradient id="ag_${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${BRANDS[k].grad[0]}"/><stop offset="1" stop-color="${BRANDS[k].grad[1]}"/></linearGradient>`;
+    o += `<linearGradient id="bg_hitec" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#80E3D8"/><stop offset="0.6" stop-color="#4BC3D2"/><stop offset="1" stop-color="#2EA7C4"/></linearGradient>`;
+    o += `<radialGradient id="bg_hitec2" cx="1" cy="0" r="0.75"><stop offset="0" stop-color="#08495A"/><stop offset="1" stop-color="#08495A" stop-opacity="0"/></radialGradient>`;
+    o += `<linearGradient id="bg_kramat" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A1151A"/><stop offset="1" stop-color="#F97526"/></linearGradient>`;
+    o += `<linearGradient id="bg_msway" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B4F5A9"/><stop offset="1" stop-color="#5BB164"/></linearGradient>`;
+    return o + '</defs>';
+  }
+  const bgRect = (key, dx = 0, op = 1) => {
+    if (op <= 0) return '';
+    const r = `x="${f(dx)}" y="0" width="${W}" height="${H}"`;
+    return `<g opacity="${f(op)}"><rect ${r} fill="url(#bg_${key})"/>${key === 'hitec' ? `<rect ${r} fill="url(#bg_hitec2)"/>` : ''}</g>`;
+  };
+  const photo = (off, op) => op <= 0 ? '' : `<image href="img/photo.jpg" x="${f(off[0])}" y="${f(off[1])}" width="1920" height="1441" preserveAspectRatio="none" opacity="${f(op)}"/>`;
+
+  // the 24's pixel skeleton: cells flash over the old form and dissolve into the new one
+  const BITS = [['11111', '00001', '11111', '10000', '11111'], ['10001', '10001', '11111', '00001', '00001']];
+  function cells(t, t0, color) {
+    let o = '';
+    BITS.forEach((rows, dg) => rows.forEach((row, r) => [...row].forEach((v, c) => {
+      if (v !== '1') return;
+      const lag = (dg * 5 + c) * 0.018 + r * 0.01;
+      const g = ease.out(seg(t, t0 + lag, t0 + 0.2 + lag)), s = ease.io(seg(t, t0 + 0.3 + lag, t0 + 0.5 + lag));
+      const k = g * (1 - s); if (k <= 0) return;
+      const sz = (CELL + 1) * k, cx = BOX.x + dg * 345 + (c + 0.5) * CELL, cy = BOX.y + (r + 0.5) * CELL;
+      o += `<rect x="${f(cx - sz / 2)}" y="${f(cy - sz / 2)}" width="${f(sz)}" height="${f(sz)}"/>`;
+    })));
+    return o ? `<g fill="${color}">${o}</g>` : '';
+  }
+  function gridLines(p, alpha) {
+    if (p <= 0 || alpha <= 0) return '';
+    let o = `<g stroke="#fff" stroke-width="1.5" opacity="${f(0.75 * alpha)}">`;
+    for (let i = 0; i <= GRID.n; i++) {
+      const v = GRID.x + i * CELL, q = ease.out(clamp(p * 1.6 - i * 0.045)), q2 = ease.out(clamp(p * 1.6 - 0.1 - i * 0.045));
+      if (q > 0) o += `<line x1="${f(GRID.x)}" y1="${f(GRID.y + i * CELL)}" x2="${f(GRID.x + GRID.s * q)}" y2="${f(GRID.y + i * CELL)}"/>`;
+      if (q2 > 0) o += `<line x1="${f(v)}" y1="${f(GRID.y)}" x2="${f(v)}" y2="${f(GRID.y + GRID.s * q2)}"/>`;
+    }
+    return o + '</g>';
+  }
+  // right-hand copy: lines leave upward through a mask, the next ones rise in
+  function rightText(t, tagX) {
+    const blocks = [{ tag: true, in: -9, out: PH.f1 }, { txt: '3 BRANDS', in: PH.f1, out: PH.f3 }, { txt: '3 STYLES', in: PH.f3, out: PH.fly }];
+    let o = `<clipPath id="rt"><rect x="1150" y="470" width="800" height="142"/></clipPath><g clip-path="url(#rt)" fill="#0a0a0a">`;
+    for (const b of blocks) {
+      const pin = ease.out(seg(t, b.in + 0.2, b.in + 0.8)), pout = ease.io(seg(t, b.out, b.out + 0.4));
+      if (pin <= 0 || pout >= 1) continue;
+      const dy = (1 - pin) * 130 - pout * 130;
+      o += b.tag ? `<g transform="translate(${f(tagX - TAG_X)} ${f(405 + dy)})">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g>`
+                 : `<text x="1400" y="${f(554 + dy)}" font-family="Inter" font-size="40">${b.txt}</text>`;
+    }
+    return o + '</g>';
+  }
+
+  // ---------- part 1: lockup → strip → square grid → 3 forms → HI-TEC ----------
+  function revealIntro(t) {
+    const pm = ease.io(seg(t, PH.merge, PH.merge + 0.7));
+    const pB = ease.io(seg(t, PH.strip, PH.strip + 0.85));
+    const pC = ease.io(seg(t, PH.square, PH.square + 0.9));
+    const pE = ease.io(seg(t, PH.fly, PH.fly + 1.0));
+    const pN = ease.out(seg(t, PH.name, PH.name + 0.95));
+    const pD = ease.io(seg(t, PH.down, PH.down + 1.0));
+    const FORMS = ['rect', 'kramat', 'msway', 'hitec'], TF = [PH.f1, PH.f2, PH.f3];
+    const formIdx = TF.filter(x => t >= x + 0.31).length, form = FORMS[formIdx];
+
+    // plate: ■ widens → strip → square → corner styles → full pill → inset pill
+    let g = toAp(lerpGeom(LK[0], MERGED, pm));
+    g = lerpAp(g, { ...STRIP, c: CORNERS.rect }, pB);
+    g = lerpAp(g, { ...SQ, c: CORNERS.rect }, pC);
+    TF.forEach((x, i) => { g = lerpAp(g, { ...g, c: CORNERS[FORMS[i + 1]] }, ease.io(seg(t, x, x + 0.6))); });
+    g = lerpAp(g, FULLPILL, pE);
+    g = lerpAp(g, SLIDE.hitec, pD);
+
+    let o = `<rect width="${W}" height="${H}" fill="#fff"/>` + bgRect('hitec', 0, seg(t, PH.down + 0.15, PH.down + 0.9));
+
+    // thin 24: waits left of the block, gets swallowed by the growing strip, then scales onto the grid
+    const x24 = Math.min(794.47, g.x + 41);
+    const small24 = { x: x24, y: 506.83, w: D24.w, h: D24.h };
+    const box24 = { x: lerp(small24.x, BOX.x, pC), y: lerp(small24.y, BOX.y, pC), w: lerp(small24.w, BOX.w, pC), h: lerp(small24.h, BOX.h, pC) };
+    // GROUP is pushed left by the 24, then leaves the frame
+    const gx = (x24 - 794.47) * 1.229 - 760 * pC;
+    if (pC < 1) o += `<g transform="translate(${f(251 + gx)} 405)" fill="#0a0a0a">${GRP.grp.map(d => `<path d="${d}"/>`).join('')}</g>` + thin24(small24, '#0a0a0a');
+
+    o += `<clipPath id="pl"><path d="${apPath(g)}"/></clipPath>`;
+    o += ap(g, ` fill="#0a0a0a"`);
+    o += `<g clip-path="url(#pl)">${photo([lerp(PHOTO_SQ[0], 0, pE), lerp(PHOTO_SQ[1], 0, pE)], seg(t, PH.strip + 0.1, PH.strip + 0.6))}</g>`;
+    o += ap(g, ` fill="url(#ag_hitec)" opacity="${f(seg(t, PH.down + 0.2, PH.down + 0.9))}"`);
+    // signet ▛ and ● tuck into the ■ (turning grey), then dissolve as the strip opens
+    if (t < PH.strip + 0.5) {
+      const q = 1 - ease.io(seg(t, PH.strip, PH.strip + 0.45));
+      [1, 2].forEach(i => {
+        const p = ease.io(seg(t, PH.merge + (i - 1) * 0.1, PH.merge + 0.6 + (i - 1) * 0.1));
+        const s = lerpGeom(LK[i], TUCK[i], p), cx = s.x + s.w / 2, cy = s.y + s.h / 2;
+        const sc = { ...s, x: cx - s.w * q / 2, y: cy - s.h * q / 2, w: s.w * q, h: s.h * q, r: s.r.map(v => v * q) };
+        if (q > 0) o += shape(sc, ` fill="${rgb(mixC(INK, [207, 207, 207], seg(p, 0.35, 1)))}"`);
+      });
+    }
+    // construction grid
+    o += `<g clip-path="url(#pl)">${gridLines(seg(t, PH.square + 0.45, PH.square + 1.25), 1 - seg(t, PH.fly, PH.fly + 0.4))}</g>`;
+
+    // the 24 itself (white inside the plate)
+    let w24 = '';
+    if (form === 'rect') w24 = thin24(box24, '#fff');
+    else if (form !== 'hitec') w24 = brand24(form, fitT(BRANDS[form].dbb, BOX), '#fff');
+    w24 = `<g clip-path="url(#pl)">${w24}</g>`;
+    TF.forEach(x => { w24 += cells(t, x, '#fff'); });
+    o += w24;
+
+    // HI-TEC: dots at the grid corners, 24 flies right, name rides in, everything settles into the logo
+    if (form === 'hitec') {
+      const b = BRANDS.hitec, LF = finalLayout('hitec'), TFin = { s: LF.s, tx: LF.ox, ty: LF.oy };
+      const T = lerpT(fitT(b.dbb, { ...BOX, x: BOX.x + FLY * pE }), TFin, pD);
+      o += brand24('hitec', T, '#fff');
+      const sN = 286 / b.nbb.h;
+      const TN = lerpT({ s: sN, tx: 774 - (b.nbb.x + b.nbb.w) * sN - (1 - pN) * 1300, ty: 539 - (b.nbb.y + b.nbb.h / 2) * sN }, TFin, pD);
+      if (pN > 0) o += `<g transform="translate(${f(TN.tx)} ${f(TN.ty)}) scale(${TN.s.toFixed(5)})" fill="#fff">${paths(b.name, '#fff')}</g>`;
+      let mk = '';
+      for (let sl = 0; sl < 6; sl++) {
+        const m = b.markers[sl];
+        if (m.col === 0) {
+          if (pN <= 0) continue;
+          mk += shape({ x: m.x * TN.s + TN.tx, y: m.y * TN.s + TN.ty, w: m.w * TN.s, h: m.h * TN.s, r: m.r.map(v => v * TN.s) });
+          continue;
+        }
+        const k = ease.out(seg(t, PH.f3 + 0.3 + sl * 0.04, PH.f3 + 0.7 + sl * 0.04));
+        const big = { x: (m.col === 1 ? GRID.x : GRID.x + GRID.s - 58) + FLY * pE + 29 * (1 - k), y: (m.top ? 281 : 742) + 29 * (1 - k), w: 58 * k, h: 58 * k, r: [29 * k, 29 * k, 29 * k, 29 * k] };
+        mk += shape(lerpGeom(big, markerGeom('hitec', sl, LF), pD));
+      }
+      o += `<g fill="#fff">${mk}</g>`;
+    }
+
+    // tagline slides with the signet, then to the right column; swaps to "3 BRANDS" / "3 STYLES"
+    o += rightText(t, lerp(lerp(1341.19, 1204, pm), 1400, pC));
+    return o;
+  }
+
+  // ---------- part 2: brand slider — bg, plate and logo move as separate layers ----------
+  function brandLogo(key, color) {
+    const b = BRANDS[key], L = finalLayout(key);
+    let o = logo(key, L, { nameIn: 1, nameOut: 0, digitsIn: 1, digitsOut: 0 }, color);
+    let mk = ''; for (let sl = 0; sl < 6; sl++) mk += shape(markerGeom(key, sl, L));
+    return o + `<g fill="${color}">${mk}</g>`;
+  }
+  const zoomAbout = (dx, s, cx = W / 2, cy = H / 2) => `translate(${f(dx + cx)} ${f(cy)}) scale(${s.toFixed(5)}) translate(${-cx} ${-cy})`;
+  function revealSlider(t) {
+    const second = t >= PH.s2, ts = second ? PH.s2 : PH.s1;
+    const [from, to] = second ? ['kramat', 'msway'] : ['hitec', 'kramat'];
+    const DA = 1800;
+    const ub = ease.io(seg(t, ts, ts + 0.9)), ua = ease.io(seg(t, ts + 0.08, ts + 1.0)), ul = ease.io(seg(t, ts + 0.2, ts + 1.15));
+    const depth = u => 1 - 0.085 * Math.sin(Math.PI * u);
+    let o = bgRect(from, ub * W) + bgRect(to, (ub - 1) * W);
+    [[from, ua, ul], [to, ua - 1, ul - 1]].forEach(([key, a, l], i) => {
+      const sA = depth(ua), sL = depth(ul);
+      const tA = zoomAbout(a * DA, sA), tL = zoomAbout(l * DA, sL);
+      o += `<clipPath id="sc${i}"><path transform="${tA}" d="${apPath(SLIDE[key])}"/></clipPath>`;
+      o += `<path transform="${tA}" d="${apPath(SLIDE[key])}" fill="url(#ag_${key})"/>`;
+      o += `<g clip-path="url(#sc${i})"><g transform="${tL}">${brandLogo(key, '#fff')}</g></g>`;
+    });
+    return o;
+  }
+
+  // ---------- part 3: last plate becomes ▛, ■ and ● grow out of it, GROUP 24 is pulled out ----------
+  function revealOutro(t) {
+    const T0 = PH.out, L = finalLayout('msway');
+    const pB = ease.io(seg(t, T0, T0 + 0.6)), pA = ease.io(seg(t, T0 + 0.15, T0 + 1.05));
+    const pSq = ease.io(seg(t, T0 + 0.85, T0 + 1.45)), pCi = ease.io(seg(t, T0 + 0.95, T0 + 1.55));
+    const pG = ease.io(seg(t, T0 + 1.25, T0 + 2.05)), pT = ease.io(seg(t, T0 + 1.35, T0 + 2.15));
+    const pK = ease.io(seg(t, T0 + 2.55, T0 + 3.2)), pS = ease.io(seg(t, T0 + 2.7, T0 + 3.6));
+    const plate = lerpAp(SLIDE.msway, toAp(LK[1]), pA);
+    let o = `<rect width="${W}" height="${H}" fill="#fff"/>`;
+    let inner = '';
+    if (pB < 1) inner += `<clipPath id="ob"><path d="${apPath(lerpAp({ x: 0, y: 0, w: W, h: H, c: CORNERS.rect }, plate, pB))}"/></clipPath><g clip-path="url(#ob)">${bgRect('msway')}</g>`;
+    const sq = lerpGeom(LK[1], LK[0], pSq), ci = lerpGeom(LK[1], LK[2], pCi);
+    const black = ` fill="#0a0a0a" opacity="${f(pK)}"`;
+    if (pSq > 0) inner += shape(sq, ` fill="url(#ag_kramat)"`) + shape(sq, black);
+    if (pCi > 0) inner += shape(ci, ` fill="url(#ag_hitec)"`) + shape(ci, black);
+    inner += ap(plate, ` fill="url(#ag_msway)"`) + ap(plate, black);
+    // the MS WAY logo retracts; its markers fold into the ▛
+    inner += logo('msway', L, { nameIn: 1, nameOut: seg(t, T0, T0 + 0.4), digitsIn: 1, digitsOut: seg(t, T0, T0 + 0.35) }, '#fff');
+    for (let sl = 0; sl < 6; sl++) {
+      const p = ease.io(seg(t, T0 + 0.05 + sl * 0.02, T0 + 0.85 + sl * 0.02));
+      if (p < 1) inner += shape(lerpGeom(markerGeom('msway', sl, L), LK[1], p), ` fill="#fff" opacity="${f(1 - seg(p, 0.6, 1))}"`);
+    }
+    // GROUP 24 out of the ■ (clipped left of it), tagline out of the ● (clipped right of it)
+    if (pG > 0) {
+      const push = (sq.x - (251 + 43.38)) * (1 - pG);
+      inner += `<clipPath id="og"><rect x="-400" y="0" width="${f(sq.x + 400)}" height="${H}"/></clipPath><g clip-path="url(#og)"><g transform="translate(${f(251 + push)} 405)" fill="#0a0a0a">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g></g>`;
+    }
+    if (pT > 0) {
+      const push = ((251 + 1373.9) - (ci.x + ci.w)) * (1 - pT);
+      inner += `<clipPath id="ot"><rect x="${f(ci.x + ci.w)}" y="0" width="${W}" height="${H}"/></clipPath><g clip-path="url(#ot)"><g transform="translate(${f(251 - push)} 405)" fill="#0a0a0a">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g></g>`;
+    }
+    return o + `<g transform="${zoomAbout(0, lerp(1, 0.4625, pS))}">${inner}</g>`;
+  }
+
+  const CAMR = [[0, 1], [PH.merge, 1.02], [PH.merge + 0.7, 1], [PH.square, 1.025], [PH.square + 0.9, 1], [PH.fly, 1.03], [PH.fly + 1.0, 1],
+                [PH.down, 1.025], [PH.down + 1.0, 1], [PH.s1, 1.03], [PH.s1 + 1.1, 1], [PH.s2, 1.03], [PH.s2 + 1.1, 1], [PH.out, 1.03],
+                [PH.out + 1.0, 1], [PH.out + 2.7, 1.02], [PH.out + 3.6, 1], [PH.end, 1.03]];
+  function camR(t) {
+    for (let i = 1; i < CAMR.length; i++) if (t <= CAMR[i][0]) {
+      const [a, sa] = CAMR[i - 1], [b, sb] = CAMR[i]; const p = seg(t, a, b);
+      return lerp(sa, sb, p * p * (3 - 2 * p));
+    }
+    return CAMR[CAMR.length - 1][1];
+  }
+  function reveal(t) {
+    clipId = 0;
+    const body = t >= PH.out ? revealOutro(t) : t >= PH.s1 ? revealSlider(t) : revealIntro(t);
+    return svgWrap(defs() + `<rect width="${W}" height="${H}" fill="#fff"/><g transform="${zoomAbout(0, camR(t))}">${body}</g>`);
+  }
+
   const SCENES = {
     film: { dur: F.end, fn: film },
+    reveal: { dur: PH.end, fn: reveal },
     'sting-hitec': { dur: 3.4, fn: t => sting('hitec', t) },
     'sting-kramat': { dur: 3.4, fn: t => sting('kramat', t) },
     'sting-msway': { dur: 3.4, fn: t => sting('msway', t) },
