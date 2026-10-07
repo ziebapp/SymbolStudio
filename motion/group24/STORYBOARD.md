@@ -78,24 +78,25 @@ Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfiel
 | C7 | 14–17 | **H3** + MS WAY 24 |
 | C8 | 17–20 | Ujęcie zapada się w kwadrat ■ → A16–A18 (GROUP 24 wyciągany z kwadratu) |
 
-## D. Reveal wg Figmy — `out/reveal.mp4` (12,3 s, 16:9, 60 fps)
+## D. Reveal — prezentacja systemu — `out/reveal.mp4` (16,5 s, 16:9, 60 fps)
 
-Źródło: Figma `5om0DyfMnKFfTDrbqGwGy2`, node `1:57`. Zdjęcie: `img/photo.jpg`, złożone ze screenshotów Figmy (narożniki domalowane). Do podmiany na oryginał.
-Footage: `img/plate.jpg` (droga bez ciężarówki) + `img/truck.png` (ciężarówka jedzie po moście, 38 px/s) + powolny dryf jak z drona. Docelowo do podmiany na wideo z Higgsfielda (H1).
-Proporcje: kompozycja z siatką w 70% skali z Figmy, lockup w 80%, logo marek 64 px wysokości. Na siatce są opisy techniczne (GRID 13×13, numer formy, specyfikacja), a komórki z elementami zmieniającymi się między formami (ścięcia, promienie, kropki) są podświetlone. Listę komórek liczy `G24.formProbe`.
-Ruch jest ciągły, bez holdów: każda faza startuje, zanim skończy się poprzednia, a easing to cubic in-out z krótkimi ogonami. Kamera przez cały czas powoli dojeżdża (+5%).
+Źródło: Figma `5om0DyfMnKFfTDrbqGwGy2`, node `1:57`, przebudowane po ocenie rady (LLM council). Kolejność marek wszędzie: **HI-TEC → KRAMAT → MS WAY**.
+Footage: `img/plate.jpg` + `img/truck.png` (ciężarówka jedzie po moście) + dryf jak z drona. Docelowo do podmiany na wideo (H1).
+Ruch jest ciągły, bez holdów. Fazy na siebie zachodzą, easing to cubic in-out, a kamera przez cały czas powoli dojeżdża (+5%).
+Proporcje: kompozycja z siatką w 70% skali z Figmy, lockup w 80%, logo marek 64 px wysokości.
 
 | # | Czas | Kadr |
 |---|---|---|
-| D1 | 0,1–0,9 | Lockup GROUP 24; ▛ i ● wjeżdżają do ■ (szarzeją), ■ poszerza się, hasło jedzie w lewo |
-| D2 | 0,7–1,6 | ■ rośnie w pasek ze zdjęciem i połyka cienkie „24” (biel w środku); GROUP jest wypychany w lewo |
-| D3 | 1,4–2,6 | Pasek → kwadratowa apla, „24” skaluje się na siatkę 13×13, hasło idzie na prawą kolumnę |
-| D4 | 2,45 / 3,15 / 3,85 | Zmiana formy „24”: komórki siatki zalewają cyfry i odsłaniają nową formę; apla zmienia narożniki (KRAMAT – ścięte, MS WAY – zaokrąglone, HI-TEC – koło + kropki). Tekst: hasło → 3 BRANDS → 3 STYLES |
-| D5 | 4,55–5,85 | „24” leci w prawo i rozciąga aplę w pigułkę na cały kadr; wjeżdża HI-TEC w dużej skali |
-| D6 | 5,4–6,45 | Logo skaluje się do formy finalnej; zdjęcie → gradient HI-TEC, apla wsuwa się w kadr |
-| D7 | 6,25 / 7,35 | Ciągły slider: KRAMAT, potem MS WAY. Tło, apla i logo jadą osobno (opóźnienie 0 / 0,08 / 0,2 s), apla i logo „odpływają” w głąb (skala −8,5%) |
-| D8 | 8,5–10,65 | Apla MS WAY zapada się w ▛ (tło razem z nią), z ▛ wyrastają ■ (KRAMAT) i ● (HI-TEC), z ■ wyciągany GROUP 24, z ● hasło |
-| D9 | 10,5–11,8 | Kolory → czerń, lockup zmniejsza się do 46% |
+| D1 | 0–1,4 | Lockup GROUP 24 żyje ~0,6 s, potem ▛ i ● wjeżdżają do ■ |
+| D2 | 1,2–2,1 | ■ rośnie w pasek z footage, połyka cienkie „24”, wypycha GROUP |
+| D3 | 1,9–2,9 | Kwadratowa apla, siatka 13×13 z opisami (GRID 13×13, FORM 0X / 04, specyfikacja) |
+| D4 | 2,95 / 3,7 / 4,45 / 5,2 | Formy „24”: grupa → HI-TEC (kropki) → KRAMAT (ścięcia) → MS WAY (promienie) → znów HI-TEC; podświetlone komórki z elementami, które się zmieniają |
+| D5 | 5,95–7,25 | HI-TEC 24 leci w prawo, apla rośnie w pigułkę, wjeżdża nazwa HI-TEC (całość w kadrze) |
+| D6 | 6,8–7,85 | Logo osiada w aplę-● HI-TEC (gradient + footage w multiply), obietnica, pojawia się HUD |
+| D7 | 8,3 / 9,9 | Slider: apla-■ KRAMAT, apla-▛ MS WAY. Tło, apla i treść jadą osobno (0 / 0,08 / 0,2 s) z „odpływem” w głąb. HUD przewija numer, nazwę i odczyt: TEMP → −18 °C, HANDOVER → 24/24, ETA → 00:00:00 |
+| D8 | 11,5–13,35 | Kamera odjeżdża: trzy plansze obok siebie (tryptyk), potem każda skaluje się wprost do swojego kształtu sygnetu ■ ▛ ● |
+| D9 | 13,1–14,0 | Z ■ wysuwa się GROUP 24, z ● hasło: kolorowy lockup |
+| D10 | 14,8–16,5 | Kolory → czerń, lockup zmniejsza się do 46% i dryfuje |
 
 ---
 
