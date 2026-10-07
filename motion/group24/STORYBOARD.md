@@ -80,7 +80,7 @@ Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfiel
 
 ## D. Reveal — prezentacja systemu — `out/reveal.mp4` (21 s, 16:9, 60 fps)
 
-Zasada: jedna rzecz naraz, czyste krzywe, ruch ciągły. Kolejność marek wszędzie: **HI-TEC → KRAMAT → MS WAY**.
+Zasada: jedna rzecz naraz, czyste krzywe, ruch ciągły. Kolejność marek w tym filmie jak w sygnecie: **■ KRAMAT → ▛ MS WAY → ● HI-TEC**, więc kształty nigdy nie zamieniają się miejscami.
 „24” jest konstrukcją parametryczną na siatce 5×5 komórek na cyfrę (te same kawałki, inna grubość i narożniki), więc każda klatka morfingu to czysty kształt.
 
 | # | Czas | Kadr |
@@ -90,16 +90,16 @@ Zasada: jedna rzecz naraz, czyste krzywe, ruch ciągły. Kolejność marek wszę
 | D3 | 2,1–2,95 | ■, ▛, ● spadają z góry jeden po drugim, bez odbicia |
 | D4 | 2,85–3,45 | Dojeżdża claim w dwóch liniach |
 | D5 | 3,8–5,45 | ■ rośnie i wciąga bryły, claim i „24”. „24” zostaje na środku i robi się białe, w prostokącie otwiera się film, prostokąt rośnie do pełnego kadru i wypycha GROUP poza ekran |
-| D6 | 5,3–9,5 | „24” wchodzi na siatkę, przelatują style: grupa → HI-TEC → KRAMAT → MS WAY; opisy techniczne, podświetlone detale |
-| D7 | 9,6–11,85 | Napisy znikają; siatka zjeżdża w lewo (i wraca do HI-TEC), wciąga siatkę KRAMAT, potem obie wciągają MS WAY; trzy siatki obok siebie na całą szerokość |
+| D6 | 5,3–9,5 | „24” wchodzi na siatkę, przelatują style: grupa → KRAMAT → MS WAY → HI-TEC; opisy techniczne, podświetlone detale |
+| D7 | 9,6–11,85 | Napisy znikają; siatka zjeżdża w lewo (i wraca do KRAMAT), wciąga siatkę MS WAY, potem obie wciągają HI-TEC; trzy siatki obok siebie na całą szerokość |
 | D8 | 12,0–12,4 | Podświetlają się ścięcia i narożniki w kolorach marek (porównanie) |
 | D9 | 13,0–13,9 | Każde „24” maleje i zjeżdża na prawo w swoim gridzie, wchodzi nazwa marki: pełne logo w każdej siatce |
-| D10 | 14,0–15,3 | Na krawędziach siatek rysują się obrysy ● ■ ▛ (proporcje jak w sygnecie: ■ od krawędzi do krawędzi); siatki znikają |
+| D10 | 14,0–15,3 | Na krawędziach siatek rysują się obrysy ■ ▛ ● (proporcje jak w sygnecie: ■ od krawędzi do krawędzi); siatki znikają |
 | D11 | 15,4–16,7 | Po każdym obrysie przechodzi impuls światła w kolorze marki |
-| D12 | 16,5–17,0 | Logotypy marek znikają, kształty wypełniają się na biało |
-| D13 | 17,1–18,2 | Szybki, płynny zoom-out (przyspieszenie i hamowanie) do skali sygnetu grupy; ● przechodzi górą na swoje miejsce |
+| D12 | 16,5–17,1 | Logotypy marek znikają, film poza kształtami gaśnie do czerni; trzy kształty to jedna złożona maska na film |
+| D13 | 17,1–18,2 | Szybki, płynny zoom-out (przyspieszenie i hamowanie) maski z filmem prosto do skali sygnetu (cienka biała krawędź, film rozjaśnia się) |
 | D14 | 18,0–18,8 | Dolatują GROUP 24 (z lewej) i claim (z prawej) |
-| D15 | 18,9–20,2 | Logo podjeżdża do góry, pod nim pojawiają się trzy logotypy marek |
+| D15 | 18,9–20,2 | Logo (białe na czerni, sygnet z filmem) podjeżdża do góry, pod nim pojawiają się logotypy KRAMAT, MS WAY, HI-TEC |
 
 ---
 

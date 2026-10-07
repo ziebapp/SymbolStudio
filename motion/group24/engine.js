@@ -463,7 +463,7 @@
   // Every form is the same five pieces — 2: top bar + body; 4: bar, upper right, lower right — each a polygon
   // in cell units with a corner spec per vertex {d: cut length in cells, k: 0 = chamfer, KR = round}.
   // Morphing interpolates vertices and corner specs, so every in-between frame is a clean geometric shape.
-  const FORMS = ['thin', 'hitec', 'kramat', 'msway'];
+  const FORMS = ['thin', 'kramat', 'msway', 'hitec'];   // signet order: ■ ▛ ●
   const KR = 0.5523, S0 = { d: 0, k: 0 }, RD = d => ({ d, k: KR }), CH = d => ({ d, k: 0 });
   const rectP = (x0, y0, x1, y1, c = [S0, S0, S0, S0]) => ({ pts: [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], c });
   const FORM_CACHE = {};
@@ -618,7 +618,7 @@
 
   // ---------- act 2: one grid, the 24 runs through its styles ----------
   const TFS = () => [PH.f1, PH.f2, PH.f3];
-  const FORM_LABEL = { thin: ['GROUP 24', 'STROKE', 1], hitec: ['HI-TEC 24', 'ROUND + DOTS', 2], kramat: ['KRAMAT 24', 'CHAMFER 45°', 3], msway: ['MS WAY 24', 'RADIUS ½ CELL', 4] };
+  const FORM_LABEL = { thin: ['GROUP 24', 'STROKE', 1], kramat: ['KRAMAT 24', 'CHAMFER 45°', 2], msway: ['MS WAY 24', 'RADIUS ½ CELL', 3], hitec: ['HI-TEC 24', 'ROUND + DOTS', 4] };
   const HL = {
     kramat: [[5, 4], [11, 6], [1, 8]],
     msway: [[4, 4], [11, 5], [1, 6], [5, 6], [7, 6], [11, 6], [1, 8]],
@@ -682,7 +682,7 @@
     `<rect x="${f(GRID.x + c * CELL)}" y="${f(GRID.y + r * CELL)}" width="${CELL}" height="${CELL}" fill="${ACCENT[form]}" fill-opacity="${f(0.18 * a)}" stroke="${ACCENT[form]}" stroke-opacity="${f(0.95 * a)}" stroke-width="1.5"/>`).join('');
 
   // ---------- act 3: three grids side by side; 24 → logo; signet outlines; light pulse; fill; zoom out ----------
-  const GRID_KEYS = ['hitec', 'kramat', 'msway'];
+  const GRID_KEYS = ['kramat', 'msway', 'hitec'];             // left → right exactly as in the signet ■ ▛ ●
   const GRID_X = [[0, -320, -640], [1500, 320, 0], [3000, 1500, 640]];      // dx of each grid: before / after step 1 / after step 2
   const gridDX = (i, t) => { const p1 = flow(seg(t, PH.slide, PH.slide + 1.0)), p2 = flow(seg(t, PH.slide + 0.85, PH.slide + 1.85));
     const X = GRID_X[i]; return lerp(lerp(X[0], X[1], p1), X[2], p2); };
@@ -717,7 +717,7 @@
       if (i === 0) {
         const TF = TFS(), started = TF.filter(x => t >= x).length;
         F = started ? lerpForm(form24(gridName(FORMS[started - 1])), form24(FORMS[started]), flow(seg(t, TF[started - 1], TF[started - 1] + 0.8))) : form24('thinG');
-        F = lerpForm(F, form24('hitec'), flow(seg(t, PH.slide, PH.slide + 0.9)));
+        F = lerpForm(F, form24(GRID_KEYS[0]), flow(seg(t, PH.slide, PH.slide + 0.9)));
       } else F = form24(key);
       const L = gridLogoL(key), pL = flow(seg(t, PH.logos, PH.logos + 0.9));
       const logoOut = flow(seg(t, PH.fill, PH.fill + 0.4));
@@ -727,10 +727,10 @@
       if (t >= PH.logos && t < PH.logos + 0.9) g += logo(key, L, { nameIn: seg(t, PH.logos + 0.35, PH.logos + 0.95), nameOut: 0, digitsIn: 0, digitsOut: 0 }, WH);
       // markers: corner cells → the logo's markers; the left pair pops in
       const kM = i === 0 ? ease.out(seg(t, PH.f1 + 0.35, PH.f1 + 0.8)) : 1;
-      let cm = i === 0 ? (() => { const TF = TFS(); let fa = 'hitec', fb = 'hitec', p = 0;
+      let cm = i === 0 ? (() => { const TF = TFS(); let fa = FORMS[1], fb = FORMS[1], p = 0;
         for (let j = 1; j < TF.length; j++) if (t >= TF[j]) { fa = FORMS[j]; fb = FORMS[j + 1]; p = flow(seg(t, TF[j], TF[j] + 0.8)); }
         const back = flow(seg(t, PH.slide, PH.slide + 0.9));
-        return cornerMarkers(fa, fb, p, kM).map((m, j) => lerpGeom(m, cornerMarkers('hitec', 'hitec', 0, 1)[j], back)); })()
+        return cornerMarkers(fa, fb, p, kM).map((m, j) => lerpGeom(m, cornerMarkers(GRID_KEYS[0], GRID_KEYS[0], 0, 1)[j], back)); })()
         : cornerMarkers(key, key, 0, 1);
       let mk = '';
       const b = BRANDS[key];
@@ -765,16 +765,16 @@
   function actSignet(t) {
     let o = '';
     const pz = expoIO(seg(t, PH.zoom, PH.zoom + 1.1)), up = flow(seg(t, PH.rise, PH.rise + 0.9)) * FIN_DY;
-    // the three video windows fly into the signet together (● passes over and drops into its slot)
+    // the three video windows fly straight into the signet — already in signet order, nothing swaps
     o += maskOver(GRID_KEYS.map((key, i) => {
       const big = sigBig(key), dx = GRID_X[i][2];
       const from = { ...big, x: big.x + dx }, to = shiftY(LK[SIG_OF[key]], up);
       const g = lerpGeom(from, to, pz);
-      return key === 'hitec' ? { ...g, y: g.y - 120 * Math.sin(Math.PI * clamp(pz * 1.15)) } : g;
+      return g;
     }), 1);
     // hairline edge on the windows so the small signet keeps its shape
     o += GRID_KEYS.map((key, i) => { const big = sigBig(key), from = { ...big, x: big.x + GRID_X[i][2] }, to = shiftY(LK[SIG_OF[key]], up);
-      let g = lerpGeom(from, to, pz); if (key === 'hitec') g = { ...g, y: g.y - 120 * Math.sin(Math.PI * clamp(pz * 1.15)) };
+      const g = lerpGeom(from, to, pz);
       return `<path d="${outline(g)}" fill="none" stroke="${WH}" stroke-opacity="0.85" stroke-width="${f(lerp(1.5, 1, pz))}"/>`; }).join('');
     // the rest of the lockup flies in at the stop: GROUP + 24 from the left, the claim from the right
     const pG = ease3(seg(t, PH.dock, PH.dock + 0.7)), pT = ease3(seg(t, PH.dock + 0.1, PH.dock + 0.8));
@@ -795,9 +795,9 @@
   // final row of brand logos under the group lockup
   const ROW_Y = 640;
   let ROWL = null;
-  const rowLayout = () => ROWL || (ROWL = (() => { const s0 = 30, gap = 90, ws = ORDER.map(k => BRANDS[k].w * s0 / BRANDS[k].h), tot = ws.reduce((a, b) => a + b, 0) + gap * 2;
+  const rowLayout = () => ROWL || (ROWL = (() => { const s0 = 30, gap = 90, ws = GRID_KEYS.map(k => BRANDS[k].w * s0 / BRANDS[k].h), tot = ws.reduce((a, b) => a + b, 0) + gap * 2;
     let x = W / 2 - tot / 2; const out = {};
-    ORDER.forEach((k, i) => { const s = s0 / BRANDS[k].h; out[k] = { ox: x, oy: ROW_Y - s0 / 2, s, lh: s0 }; x += ws[i] + gap; });
+    GRID_KEYS.forEach((k, i) => { const s = s0 / BRANDS[k].h; out[k] = { ox: x, oy: ROW_Y - s0 / 2, s, lh: s0 }; x += ws[i] + gap; });
     return out; })());
 
   const zoomAbout = (dx, s, cx = W / 2, cy = H / 2) => `translate(${f(dx + cx)} ${f(cy)}) scale(${s.toFixed(5)}) translate(${-cx} ${-cy})`;
