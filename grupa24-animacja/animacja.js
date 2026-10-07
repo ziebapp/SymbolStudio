@@ -23,10 +23,11 @@
 
 const D = window.G24_DATA;
 const W = 1840, H = 928, CX = 920, CY = 464;
-const DURATION = 27;
+const DURATION = 28;
 const ANCHORS = 24;                  // kotwice kątowe konturu (co 15°)
 const N = ANCHORS * 30;              // punktów na kontur
-const CAMERA = 0.07;                 // najazd kamery przez całą animację
+const CAMERA = 0.08;                 // najazd kamery przez całą animację
+const STROKE = 2;                    // obrysy konstrukcyjne sygnetów: zawsze 2 px
 const SVGNS = 'http://www.w3.org/2000/svg';
 const VIDEO_SRC = new URLSearchParams(location.search).get('video') || 'assets/truck.mp4';
 
@@ -60,9 +61,10 @@ function cubicBezier(x1, y1, x2, y2) {
 }
 
 const E = {
-  io: cubicBezier(0.45, 0, 0.25, 1),    // miękki start, długie dojście
+  io: cubicBezier(0.4, 0, 0.1, 1),      // miękki start, długie, ciche dojście
   out: cubicBezier(0.22, 1, 0.36, 1),   // wejścia elementów
   open: cubicBezier(0.5, 0, 0.15, 1),   // otwieranie ramki
+  glide: cubicBezier(0.3, 0, 0.2, 1),
   lin: t => t,
 };
 
@@ -126,7 +128,10 @@ function pathAt(keys, t) {
     const [t1, p1, v1] = keys[i];
     if (t < t1) {
       const [t0, p0, v0] = keys[i - 1];
-      const dt = t1 - t0, s = (t - t0) / dt, s2 = s * s, s3 = s2 * s;
+      const dt = t1 - t0;
+      let s = (t - t0) / dt;
+      if (v0.every(v => v === 0) && v1.every(v => v === 0)) s = (E.glide(s) * 2 + s) / 3;   // dłuższe wybrzmienie
+      const s2 = s * s, s3 = s2 * s;
       const h00 = 2 * s3 - 3 * s2 + 1, h10 = s3 - 2 * s2 + s, h01 = 3 * s2 - 2 * s3, h11 = s3 - s2;
       return p0.map((x, j) => h00 * x + h10 * dt * v0[j] + h01 * p1[j] + h11 * dt * v1[j]);
     }
@@ -396,11 +401,13 @@ const MOVES = [
   [1.9, L1], [3.4, L2, true], [4.6, L3],
   [6.6, L3], [7.8, L4],
   [8.2, L4], [9.2, L5],
-  [13.9, L5], [15.0, L8],
-  [21.2, L8], [22.4, L12],
+  [13.9, L5], [15.2, L8],
+  [21.8, L8], [23.0, L12],
 ];
+// części znaku ruszają kaskadowo (apla → 2 → 4 → hasło), co daje organiczny, „żywy” ruch
+const LAG = { plate: 0, letters: 0, square: 0.06, d2: 0.06, circle: 0.12, d4: 0.12, tagline: 0.18 };
 const POS = {};
-for (const part of Object.keys(L1)) POS[part] = path(MOVES.map(([t, L, pass]) => [t, L[part], pass]));
+for (const part of Object.keys(L1)) POS[part] = path(MOVES.map(([t, L, pass]) => [t + LAG[part], L[part], pass]));
 const markPart = (part, t) => pathAt(POS[part], t);
 // środek całego znaku (apla + 2 + 4)
 const markCenter = t => { const [x, y, s] = markPart('plate', t); return [x + 257.9 * s, y + 31.5 * s]; };
@@ -408,37 +415,28 @@ const markCenter = t => { const [x, y, s] = markPart('plate', t); return [x + 25
 /* ----------------------------------------------------------------- tracks */
 
 const T = {
-  // apla pod GRUPA (do F4 tę rolę gra wideo)
-  plateFill: seq(C.black, [10.6, 11.2, C.grey], [14.4, 15.0, C.kramat], [16.2, 16.8, C.grey], [19.6, 20.2, C.black]),
-  plateOp: seq(0, [8.3, 8.8, 1]),
-  lettersFill: seq(C.white, [14.4, 15.0, C.ink], [19.6, 20.2, C.white]),
+  // apla pod GRUPA. F4: wideo, F5–F7: światła, F8–F10: aktywna część w kolorze marki, reszta w masce wideo
+  plateFill: seq(C.black, [10.6, 11.2, C.grey], [14.6, 15.3, C.kramat], [19.9, 19.91, C.black, E.lin]),
+  plateOp: seq(0, [8.3, 8.8, 1], [16.6, 17.3, 0], [20.4, 21.0, 1]),
+  lettersFill: seq(C.white, [14.6, 15.3, C.ink], [16.6, 17.3, C.white]),
   regOp: seq(0, [7.3, 7.8, 1]),
   // pole „2”
-  sqFill: seq(C.black, [8.4, 9.0, C.grey], [10.6, 11.2, C.black], [12.2, 12.8, C.grey], [16.2, 16.8, C.msway], [17.8, 18.4, C.grey], [19.6, 20.2, C.black]),
-  sqOp: seq(0, [6.9, 7.5, 1]),
-  d2Fill: seq(C.white, [14.4, 15.0, C.ink], [19.6, 20.2, C.white]),
+  sqFill: seq(C.black, [8.4, 9.0, C.grey], [10.6, 11.2, C.black], [12.2, 12.8, C.grey], [16.0, 16.01, C.msway, E.lin], [19.9, 19.91, C.black, E.lin]),
+  sqOp: seq(0, [6.9, 7.5, 1], [14.4, 15.0, 0], [16.6, 17.3, 1], [18.4, 19.1, 0], [20.4, 21.0, 1]),
+  d2Fill: seq(C.white, [16.6, 17.3, C.ink], [18.4, 19.1, C.white]),
   // pole „4”
-  circFill: seq(C.black, [8.4, 9.0, C.grey], [12.2, 12.8, C.black], [14.4, 15.0, C.grey], [17.8, 18.4, C.hitec], [19.6, 20.2, C.black]),
-  circOp: seq(0, [6.9, 7.5, 1]),
-  d4Fill: seq(C.white, [14.4, 15.0, C.ink], [19.6, 20.2, C.white]),
+  circFill: seq(C.black, [8.4, 9.0, C.grey], [12.2, 12.8, C.black], [17.6, 17.61, C.hitec, E.lin], [20.4, 21.0, C.black]),
+  circOp: seq(0, [6.9, 7.5, 1], [14.4, 15.0, 0], [18.4, 19.1, 1]),
+  d4Fill: seq(C.white, [18.4, 19.1, C.ink], [20.4, 21.0, C.white]),
   // hasło
   tagFill: seq(C.white, [5.5, 6.1, C.ink]),
   tagOp: seq(1, [6.6, 7.1, 0], [14.59, 14.6, 1, E.lin]),
-  // F1: rysowanie napisów (odsłanianie od lewej)
-  lettersWipe: seq(0, [0.35, 1.35, 1, E.out]),
-  d2Wipe: seq(0, [0.7, 1.3, 1, E.out]),
-  d4Wipe: seq(0, [0.8, 1.4, 1, E.out]),
-  tagWipe: seq(0, [1.0, 1.85, 1, E.out], [13.8, 13.81, 0, E.lin], [14.6, 15.5, 1, E.out]),
-  lettersDy: seq(14, [0.35, 1.35, 0, E.out]),
-  d2Dy: seq(14, [0.7, 1.3, 0, E.out]),
-  d4Dy: seq(14, [0.8, 1.4, 0, E.out]),
-  tagDy: seq(14, [1.0, 1.85, 0, E.out]),
 
   // wideo: skala i środek; vidFollow = jak mocno wideo trzyma się znaku
-  vidOp: seq(1, [8.3, 8.8, 0], [14.29, 14.3, 1, E.lin]),
-  vidS: seq(1, [3.6, 5.0, 0.66], [5.4, 6.6, 0.38], [14.25, 14.3, 1, E.lin]),
-  vidC: seq([CX, CY], [3.6, 5.0, [923, 464]], [14.25, 14.3, [CX, CY], E.lin]),
-  vidFollow: seq(0, [5.4, 6.6, 1], [14.25, 14.3, 0, E.lin]),
+  vidOp: seq(1, [8.3, 8.8, 0], [14.2, 15.0, 1], [21.0, 21.4, 0]),
+  vidS: seq(1, [3.6, 5.0, 0.66], [5.4, 6.6, 0.38]),
+  vidC: seq([CX, CY], [3.6, 5.0, [923, 464]]),
+  vidFollow: seq(0, [5.4, 6.6, 1]),
 
   // linie konstrukcyjne
   bandP: seq(0, [2.1, 3.3, 1, E.out], [5.9, 6.5, 0]),
@@ -453,9 +451,30 @@ const T = {
   olOp: seq(1, [6.2, 6.8, 0]),
   olCol: [255, 255, 255, 0.9],
 
+  // wielkie kształty F8–F11: cienki obrys w kolorze marki
+  bigDraw: seq(0, [14.4, 16.0, 1, E.io]),
+  bigOp: seq(0, [14.39, 14.4, 1, E.lin], [20.8, 21.9, 0]),
+  bigCol: seq(C.kramat, [16.5, 17.7, C.msway], [18.3, 19.5, C.hitec]),
+
   camera: seq(0, [0, DURATION, 1, E.lin]),
-  fade: seq(1, [0, 0.8, 0, E.out], [26.2, 27, 1]),
+  fade: seq(1, [0, 1.0, 0, E.out], [27.2, 28, 1]),
 };
+
+// F1: litery GRUPA, cyfry i hasło wjeżdżają po kolei (unoszą się i pojawiają)
+// ścieżki składowe są sklejone spacją przed „M” (wewnątrz glifu „ZM” bez spacji)
+const glyphs = d => d.split(' M').map((p, i) => (i ? 'M' + p : p));
+const RISE = 22;
+const rise = (start, dur = 1.0) => ({ dy: seq(RISE, [start, start + dur, 0, E.out]), op: seq(0, [start, start + dur * 0.6, 1, E.out]) });
+const LETTERS_IN = glyphs(D.grupa.letters).map((_, i) => rise(0.3 + i * 0.07));
+const D2_IN = [rise(0.72)], D4_IN = [rise(0.8)];
+// hasło wchodzi dwa razy: F1 i F8
+const TAG_IN = glyphs(D.grupa.tagline).map((_, i) => {
+  const a = 1.0 + i * 0.022, b = 14.7 + i * 0.022;
+  return {
+    dy: seq(RISE / 2, [a, a + 0.8, 0, E.out], [13.8, 13.81, RISE / 2, E.lin], [b, b + 0.8, 0, E.out]),
+    op: seq(0, [a, a + 0.5, 1, E.out], [13.8, 13.81, 0, E.lin], [b, b + 0.5, 1, E.out]),
+  };
+});
 
 // pionowe linie: odpalane od hasła (prawa strona) w lewo
 const VLINES = [1331.48, 1213.32, 1191.42, 1125.59, 1116.99, 1048.99, 1036.88, 675.55]
@@ -476,22 +495,25 @@ const rectF3 = { shape: 'rectF3', x: 342, y: 224, s: 1 };
 const S_full = [{ shape: 'rectFull', x: -60, y: -60, s: 1 }, PT([923, 464]), PT([923, 464])];
 const S_rect = [rectF3, rectF3, rectF3];
 const S_mask = t => [plateSpec(t), squareSpec(t), circleSpec(t)];   // wideo w masce logo
-const S_K0 = (() => {
-  const s = 0.45, o = { shape: 'K_outer', x: CX - K_C[0] * s, y: 464.52 - K_C[1] * s, s };
-  return [o, { ...o, hole: true }, PT([CX, CY])];
-})();
-const S_K = [...frame('K', 177, 72, 1), PT([CX, CY])];
-const S_M = [...frame('M', 122, -12, 1), PT([CX, CY])];
-const S_H = [...frame('H', 130, 47, 1), PT([CX, CY])];
-const S_Hcover = [...frame('H', 920.544 - H_C[0] * 3, 464.324 - H_C[1] * 3, 3), PT([CX, CY])];
-
 const CLIP = [
   [3.6, 5.0, S_full, S_rect],
-  [5.3, 6.7, S_rect, S_mask, E.io, 0.1],   // wideo zjeżdża kolejno do apli, kwadratu i koła
-  [14.3, 15.7, S_K0, S_K, E.open],
-  [16.2, 17.2, S_K, S_M],
-  [17.8, 18.8, S_M, S_H],
-  [19.4, 21.4, S_H, S_Hcover],
+  [5.3, 6.7, S_rect, S_mask, E.io, 0.1],   // wideo zjeżdża kolejno do apli, kwadratu i koła, potem zostaje w masce logo
+];
+
+// F8–F11: wielkie kształty jako cienki obrys, przejścia przez morf obrysu (biały środek)
+const B_K0 = (() => {
+  const s = 0.45, o = { shape: 'K_outer', x: CX - K_C[0] * s, y: 464.52 - K_C[1] * s, s };
+  return [o, { ...o }];
+})();
+const B_K = frame('K', 177, 72, 1);
+const B_M = frame('M', 122, -12, 1);
+const B_H = frame('H', 130, 47, 1);
+const B_Hcover = frame('H', 920.544 - H_C[0] * 3, 464.324 - H_C[1] * 3, 3);
+const BIG = [
+  [14.4, 16.0, B_K0, B_K, E.open],
+  [16.5, 17.7, B_K, B_M],
+  [18.3, 19.5, B_M, B_H],
+  [20.2, 22.2, B_H, B_Hcover],
 ];
 
 /* --------------------------------------------------------------- brands */
@@ -520,25 +542,25 @@ const SLOT = Object.fromEntries(BR.map(b => [b, brandOrigin(b)]));
  */
 function logoTracks(a, sygDelay, exit = null) {
   const s = a + sygDelay;
-  const typeOp = [[a, a + 0.6, 1, E.out]], wordDx = [[a, a + 0.7, 0, E.out]];
-  const zoom = [[s, s + 0.8, 1, E.out]], sOp = [[s - 0.01, s, 1, E.lin]];
+  const typeOp = [[a, a + 0.7, 1, E.out]], wordDx = [[a, a + 0.9, 0, E.out]];
+  const zoom = [[s, s + 1.0, 1, E.out]], sOp = [[s - 0.01, s, 1, E.lin]];
   if (exit !== null) {
     const o = exit;
-    typeOp.push([o, o + 0.35, 0]); wordDx.push([o, o + 0.35, -22]);
-    zoom.push([o, o + 0.35, 1.25]); sOp.push([o, o + 0.35, 0]);
+    typeOp.push([o, o + 0.4, 0]); wordDx.push([o, o + 0.4, -18]);
+    zoom.push([o, o + 0.4, 1.22]); sOp.push([o, o + 0.4, 0]);
   }
   return {
-    typeOp: seq(0, ...typeOp), wordDx: seq(-28, ...wordDx),
-    draw: seq(0, [s, s + 0.8, 1]), fill: seq(0, [s + 0.55, s + 1.0, 1]),
-    zoom: seq(0.8, ...zoom), sOp: seq(0, ...sOp),
+    typeOp: seq(0, ...typeOp), wordDx: seq(-26, ...wordDx),
+    draw: seq(0, [s, s + 0.9, 1]), fill: seq(0, [s + 0.6, s + 1.1, 1]),
+    zoom: seq(0.86, ...zoom), sOp: seq(0, ...sOp),
   };
 }
 
 // F5–F7: jedna marka naraz obok GRUPY
 const SLOT_T = {
-  kramat: logoTracks(8.8, 0.5, 10.6),
-  msway: logoTracks(10.85, 0.05, 12.2),
-  hitec: logoTracks(12.45, 0.05, 13.8),
+  kramat: logoTracks(8.8, 0.55, 10.6),
+  msway: logoTracks(10.85, 0.1, 12.2),
+  hitec: logoTracks(12.45, 0.1, 13.8),
   // „24” zostaje w miejscu, zmienia tylko kolor
   digOp: seq(0, [9.25, 9.75, 1, E.out], [13.8, 14.15, 0]),
   digFill: seq(C.kramat, [10.7, 11.2, C.msway], [12.3, 12.8, C.hitec]),
@@ -547,8 +569,8 @@ const SLOT_T = {
 // F13: kolumna submarek buduje się kaskadowo od góry do dołu
 const FIN = { kramat: [1153, 231], msway: [1153, 419], hitec: [1153, 607] };
 const FIN_T = Object.fromEntries(BR.map((b, i) => {
-  const t0 = 22.3 + i * 0.35;
-  return [b, { ...logoTracks(t0, 0.35), digOp: seq(0, [t0 + 0.3, t0 + 0.7, 1, E.out]) }];
+  const t0 = 22.9 + i * 0.4;
+  return [b, { ...logoTracks(t0, 0.4), digOp: seq(0, [t0 + 0.35, t0 + 0.8, 1, E.out]) }];
 }));
 
 /* ------------------------------------------------------------------ DOM */
@@ -566,43 +588,42 @@ const el = (tag, attrs = {}, parent) => {
 const defs = $('defs'), gLines = $('lines'), gMark = $('mark'), gBrands = $('brands');
 const G = D.grupa;
 
-// odsłanianie (wipe) w lokalnych współrzędnych części
-function wipeGroup(id, bb, d, parent) {
-  const pad = 4;
-  const cp = el('clipPath', { id: 'cl-' + id, clipPathUnits: 'userSpaceOnUse' }, defs);
-  const rect = el('rect', { x: bb[0] - pad, y: bb[1] - 40, height: bb[3] - bb[1] + 80, width: 0 }, cp);
+// napis rozbity na glify (każdy może mieć własny ruch)
+function glyphGroup(d, parent) {
   const outer = el('g', {}, parent);
-  const inner = el('g', { 'clip-path': `url(#cl-${id})` }, outer);
-  const p = el('path', { d }, inner);
-  return { outer, inner, path: p, rect, w: bb[2] - bb[0] + pad * 2 };
+  return { outer, glyphs: glyphs(d).map(gd => el('path', { d: gd }, outer)) };
 }
+// obrys o stałej grubości niezależnie od skali (szerokość ustawiana co klatkę)
+const strokeAttrs = extra => ({ fill: 'none', 'vector-effect': 'non-scaling-stroke', 'stroke-linejoin': 'round', 'stroke-linecap': 'round', ...extra });
+const drawAttrs = { pathLength: 1, 'stroke-dasharray': '0 2' };
+const STROKED = [];          // [element, grubość w px]
+const stroked = (node, px) => { STROKED.push([node, px]); return node; };
+
 // tło + obrys elementu (obrys rysowany kreską o długości 0→1)
 function boxPart(d, parent) {
   const g = el('g', {}, parent);
-  return {
-    g,
-    fill: el('path', { d }, g),
-    line: el('path', { d, fill: 'none', 'stroke-width': 1.5, pathLength: 1, 'stroke-dasharray': '0 2', 'stroke-linejoin': 'round' }, g),
-  };
+  return { g, fill: el('path', { d }, g), line: stroked(el('path', { d, ...strokeAttrs(drawAttrs) }, g), STROKE) };
 }
+
+// linie konstrukcyjne i wielkie kształty (pod znakiem)
+const band = [el('line', {}, gLines), el('line', {}, gLines)];
+const vlines = VLINES.map(() => el('line', {}, gLines));
+const caplines = CAPLINES.map(() => el('line', {}, gLines));
+[...band, ...vlines, ...caplines].forEach(l => { l.setAttribute('vector-effect', 'non-scaling-stroke'); stroked(l, 1); });
+const bigLines = [0, 1].map(() => stroked(el('path', strokeAttrs(drawAttrs), gLines), STROKE));
 
 const M = {
   plate: boxPart(G.plate, gMark),
   square: boxPart(G.square, gMark),
   circle: boxPart(G.circle, gMark),
-  letters: wipeGroup('letters', G.lettersBB, G.letters, gMark),
+  letters: glyphGroup(G.letters, gMark),
   reg: el('path', { d: G.reg }, el('g', {}, gMark)),
-  d2: wipeGroup('d2', G.d2BB, G.d2, gMark),
-  d4: wipeGroup('d4', G.d4BB, G.d4, gMark),
-  tagline: wipeGroup('tagline', G.taglineBB, G.tagline, gMark),
+  d2: glyphGroup(G.d2, gMark),
+  d4: glyphGroup(G.d4, gMark),
+  tagline: glyphGroup(G.tagline, gMark),
 };
 
-// linie konstrukcyjne
-const band = [el('line', {}, gLines), el('line', {}, gLines)];
-const vlines = VLINES.map(() => el('line', {}, gLines));
-const caplines = CAPLINES.map(() => el('line', {}, gLines));
-
-// sygnet: wypełnienie + dwa obrysy (zewnętrzny i otwór) rysowane jednocześnie od lewej
+// sygnet: wypełnienie + dwa obrysy 2 px (zewnętrzny i otwór) rysowane jednocześnie od lewej
 function sygnetNode(b, ox, oy, scale, parent) {
   const st = sygnetState(b, ox, oy, scale), color = D.brands[b].color;
   const A = specPts(st[0], new Float64Array(N * 2)), B = specPts(st[1], new Float64Array(N * 2));
@@ -612,10 +633,7 @@ function sygnetNode(b, ox, oy, scale, parent) {
     g,
     c: [ox + (sb[0] + sb[2]) / 2 * scale, oy + (sb[1] + sb[3]) / 2 * scale],
     fill: el('path', { d: contoursD([{ pts: A, hole: false }, { pts: B, hole: true }]), fill: color }, g),
-    lines: [A, B].map(pts => el('path', {
-      d: contoursD([{ pts, hole: false }]), fill: 'none', stroke: color, 'stroke-width': 1.6,
-      pathLength: 1, 'stroke-dasharray': '0 2', 'stroke-linejoin': 'round',
-    }, g)),
+    lines: [A, B].map(pts => stroked(el('path', { d: contoursD([{ pts, hole: false }]), stroke: color, ...strokeAttrs(drawAttrs) }, g), STROKE)),
   };
 }
 
@@ -624,14 +642,18 @@ function brandGroup(b, parent, withDigits = true) {
   const g = el('g', {}, parent);
   return {
     g,
-    word: el('path', { d: B.word, fill: rgb(C.ink) }, el('g', {}, g)),
-    tagline: el('path', { d: B.tagline, fill: rgb(C.ink) }, el('g', {}, g)),
+    word: glyphGroup(B.word, g),
+    tagline: glyphGroup(B.tagline, g),
     digits: withDigits ? el('path', { d: B.digits, fill: B.color }, el('g', {}, g)) : null,
   };
 }
 const slot = Object.fromEntries(BR.map(b => [b, { type: brandGroup(b, gBrands, false), syg: sygnetNode(b, SLOT[b][0], SLOT[b][1], BS, gBrands) }]));
 const slotDigits = el('path', { d: D.brands.kramat.digits }, el('g', { transform: tf(SLOT.kramat[0], SLOT.kramat[1], BS) }, gBrands));
 const fin = Object.fromEntries(BR.map(b => [b, { type: brandGroup(b, gBrands), syg: sygnetNode(b, FIN[b][0], FIN[b][1], 1, gBrands) }]));
+for (const n of [...Object.values(slot), ...Object.values(fin)]) {
+  n.type.word.outer.setAttribute('fill', rgb(C.ink));
+  n.type.tagline.outer.setAttribute('fill', rgb(C.ink));
+}
 
 const camera = $('camera'), vlayer = $('vlayer'), vinner = $('vinner'), fadeEl = $('fade');
 
@@ -641,7 +663,8 @@ const setPart = (node, part, t, dy = 0) => {
   const [x, y, s] = markPart(part, t);
   node.setAttribute('transform', tf(x, y + dy, s));
 };
-const clipBufs = makeBufs(3);
+const clipBufs = makeBufs(3), bigBufs = makeBufs(2);
+let fitScale = 1;
 
 function updateSygnet(n, K, t) {
   const o = at(K.sOp, t);
@@ -654,20 +677,39 @@ function updateSygnet(n, K, t) {
   for (const l of n.lines) l.setAttribute('stroke-dasharray', `${d} 2`);
   n.fill.setAttribute('opacity', op(at(K.fill, t)));
 }
+// typografia marki: litery wjeżdżają kaskadowo w stronę sygnetu
 function updateType(g, x, y, s, K, t) {
-  const o = at(K.typeOp, t);
-  g.g.style.display = o > 0.001 ? '' : 'none';
-  if (o <= 0.001) return;
-  const dx = at(K.wordDx, t);
-  g.word.parentNode.setAttribute('transform', tf(x + dx, y, s));
-  g.tagline.parentNode.setAttribute('transform', tf(x - dx, y, s));
-  g.g.setAttribute('opacity', op(o));
+  let any = false;
+  const glyphRun = (grp, lag, dir) => {
+    grp.outer.setAttribute('transform', tf(x, y, s));
+    grp.glyphs.forEach((p, i) => {
+      const tt = t - i * lag, o = at(K.typeOp, tt);
+      if (o > 0.001) any = true;
+      p.setAttribute('opacity', op(o));
+      p.setAttribute('transform', `translate(${(dir * at(K.wordDx, tt) / s).toFixed(2)} 0)`);
+    });
+  };
+  glyphRun(g.word, 0.035, 1);
+  glyphRun(g.tagline, 0.012, -1);
+  g.g.style.display = any ? '' : 'none';
+}
+function updateGlyphs(grp, part, t, keys, fill) {
+  setPart(grp.outer, part, t);
+  grp.outer.setAttribute('fill', rgb(at(fill, t)));
+  grp.glyphs.forEach((p, i) => {
+    const k = keys[i];
+    p.setAttribute('transform', `translate(0 ${at(k.dy, t).toFixed(2)})`);
+    p.setAttribute('opacity', op(at(k.op, t)));
+  });
 }
 
 function render(t) {
-  /* kamera: stały, bardzo powolny najazd */
+  /* kamera: stały, powolny najazd + ledwie odczuwalne „oddychanie” */
   const cam = 1 + CAMERA * at(T.camera, t);
-  camera.style.transform = `translate(${CX}px,${CY}px) scale(${cam.toFixed(5)}) translate(${-CX}px,${-CY}px)`;
+  const bx = 7 * Math.sin((2 * Math.PI * t) / 17), by = 4 * Math.sin((2 * Math.PI * t) / 23 + 1);
+  camera.style.transform = `translate(${(CX + bx).toFixed(2)}px,${(CY + by).toFixed(2)}px) scale(${cam.toFixed(5)}) translate(${-CX}px,${-CY}px)`;
+  const px = 1 / (fitScale * cam);
+  for (const [node, w] of STROKED) node.setAttribute('stroke-width', (w * px).toFixed(3));
 
   /* wideo */
   const vOp = at(T.vidOp, t);
@@ -703,6 +745,19 @@ function render(t) {
     l.setAttribute('stroke', lc); l.style.display = cp > 0.001 ? '' : 'none';
   });
 
+  /* F8–F11: wielkie kształty — cienki obrys, morf przez obrys */
+  const bOp = at(T.bigOp, t);
+  if (bOp > 0.001) {
+    const list = morphAt(BIG, t, bigBufs), col = rgb(at(T.bigCol, t)), d = at(T.bigDraw, t).toFixed(4);
+    bigLines.forEach((l, i) => {
+      l.style.display = '';
+      l.setAttribute('d', contoursD([{ pts: list[i].pts, hole: false }]));
+      l.setAttribute('stroke', col);
+      l.setAttribute('stroke-dasharray', `${d} 2`);
+      l.setAttribute('opacity', op(bOp));
+    });
+  } else bigLines.forEach(l => { l.style.display = 'none'; });
+
   /* GRUPA 24: tła i obrysy */
   const olOp = at(T.olOp, t);
   const boxes = [
@@ -725,19 +780,11 @@ function render(t) {
   M.reg.setAttribute('fill', rgb(C.ink));
   M.reg.setAttribute('opacity', op(at(T.regOp, t)));
 
-  const wipes = [
-    ['letters', T.lettersFill, T.lettersWipe, T.lettersDy, null],
-    ['d2', T.d2Fill, T.d2Wipe, T.d2Dy, null],
-    ['d4', T.d4Fill, T.d4Wipe, T.d4Dy, null],
-    ['tagline', T.tagFill, T.tagWipe, T.tagDy, T.tagOp],
-  ];
-  for (const [part, fill, wipe, dy, opk] of wipes) {
-    const w = M[part];
-    setPart(w.outer, part, t, at(dy, t));
-    w.path.setAttribute('fill', rgb(at(fill, t)));
-    w.rect.setAttribute('width', (w.w * at(wipe, t)).toFixed(2));
-    if (opk) w.outer.setAttribute('opacity', op(at(opk, t)));
-  }
+  updateGlyphs(M.letters, 'letters', t, LETTERS_IN, T.lettersFill);
+  updateGlyphs(M.d2, 'd2', t, D2_IN, T.d2Fill);
+  updateGlyphs(M.d4, 'd4', t, D4_IN, T.d4Fill);
+  updateGlyphs(M.tagline, 'tagline', t, TAG_IN, T.tagFill);
+  M.tagline.outer.setAttribute('opacity', op(at(T.tagOp, t)));
 
   /* F5–F7: submarka obok GRUPY */
   for (const b of BR) {
@@ -766,6 +813,7 @@ function render(t) {
 const stage = $('stage');
 function fit() {
   const s = Math.min(innerWidth / W, innerHeight / H);
+  fitScale = s;
   stage.style.transform = `translate(${((innerWidth - W * s) / 2).toFixed(1)}px, ${((innerHeight - H * s) / 2).toFixed(1)}px) scale(${s})`;
 }
 addEventListener('resize', fit);
@@ -785,7 +833,7 @@ function syncVideo() {
 }
 
 // klatki z Figmy (momenty, w których scena jest w danym układzie)
-const FRAMES = [1.8, 3.4, 5.2, 7.9, 10.3, 12.0, 13.6, 15.8, 17.4, 19.0, 20.1, 22.3, 25.0];
+const FRAMES = [1.8, 3.4, 5.2, 7.9, 10.4, 12.0, 13.6, 16.2, 18.0, 19.8, 21.0, 22.9, 26.0];
 
 const params = new URLSearchParams(location.search);
 if (params.has('clean')) document.body.classList.add('clean');
