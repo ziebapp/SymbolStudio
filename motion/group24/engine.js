@@ -688,11 +688,11 @@
   const SIG_K = GRID.s / (96.24 * LS);
   const sigBig = key => { const g = LK[SIG_OF[key]], w = g.w * SIG_K, h = g.h * SIG_K;
     return { x: W / 2 - w / 2, y: H / 2 - h / 2, w, h, r: g.r.map(v => v * SIG_K), notch: g.notch || 0 }; };
-  const ANCHOR = { hitec: [0.5, 0.5], kramat: [0.5, 0.5], msway: [0.42, 0.37] };
+  // all three logos on one line: centred in their grid, a little above centre so the ▛'s notch stays clear
+  const LOGO_CY = H / 2 - 62;
   function gridLogoL(key) {
-    const b = BRANDS[key], s = 46 / b.h, P = sigBig(key);
-    const ax = P.x + P.w * ANCHOR[key][0], ay = P.y + P.h * ANCHOR[key][1];
-    return { ox: ax - b.w * s / 2, oy: ay - b.h * s / 2, s, lh: b.h * s };
+    const b = BRANDS[key], s = 46 / b.h;
+    return { ox: W / 2 - b.w * s / 2, oy: LOGO_CY - b.h * s / 2, s, lh: b.h * s };
   }
   function actGrids(t) {
     let o = '';
