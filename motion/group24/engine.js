@@ -542,9 +542,11 @@
   // ---------- footage: the original still (truck stays in the photo), framed tight, slow drift, darkened ----------
   function footage(t) {
     const u = t / PH.end, s = 1.6 * (1 + 0.035 * u), dx = -26 * u, dy = 9 * u;
-    return `<g transform="translate(${f(960 + dx)} ${f(540 + dy)}) scale(${s.toFixed(5)}) translate(-880 -600)">` +
+    // once only the signet windows remain, the footage brightens so the small signet still reads
+    const lift = seg(t, PH.fill, PH.zoom + 0.8), dark = 0.3 * (1 - lift);
+    return `<g transform="translate(${f(960 + dx)} ${f(540 + dy)}) scale(${s.toFixed(5)}) translate(-880 -600)"${lift > 0 ? ` style="filter:brightness(${(1 + 0.9 * lift).toFixed(3)}) contrast(${(1 + 0.15 * lift).toFixed(3)})"` : ''}>` +
       `<image href="img/photo.jpg" x="0" y="0" width="1920" height="1441" preserveAspectRatio="none"/></g>` +
-      `<rect x="-40" y="-40" width="${W + 80}" height="${H + 80}" fill="#000" opacity="0.3"/>`;
+      (dark > 0 ? `<rect x="-40" y="-40" width="${W + 80}" height="${H + 80}" fill="#000" opacity="${f(dark)}"/>` : '');
   }
 
   // ---------- act 1: GROUP, the 24 drawn as a path, shapes fall, claim — the ■ sits at the frame centre ----------
@@ -694,8 +696,11 @@
     const b = BRANDS[key], s = 46 / b.h;
     return { ox: W / 2 - b.w * s / 2, oy: LOGO_CY - b.h * s / 2, s, lh: b.h * s };
   }
+  // one compound path: the frame with the three signet shapes cut out — the footage stays only inside them
+  const maskOver = (shapes, op) => op <= 0 ? '' :
+    `<path fill-rule="evenodd" fill="#050505" opacity="${f(op)}" d="M-200 -200H${W + 200}V${H + 200}H-200Z ${shapes.map(outline).join(' ')}"/>`;
   function actGrids(t) {
-    let o = '';
+    let o = maskOver(GRID_KEYS.map((key, i) => { const g = sigBig(key); return { ...g, x: g.x + GRID_X[i][2] }; }), seg(t, PH.fill + 0.1, PH.fill + 0.6));
     const gA = 1 - seg(t, PH.outline + 0.9, PH.outline + 1.3);                 // grids fade once the outlines are drawn
     GRID_KEYS.forEach((key, i) => {
       const dx = gridDX(i, t);
@@ -741,7 +746,7 @@
       const pd = flow(seg(t, PH.outline + i * 0.12, PH.outline + 0.9 + i * 0.12));
       if (pd > 0 && t < PH.zoom) {
         const d = outline(sigBig(key)), pp = seg(t, PH.pulse + i * 0.12, PH.pulse + 1.1 + i * 0.12), fl = seg(t, PH.fill + 0.15, PH.fill + 0.55);
-        g += `<path d="${d}" fill="${WH}" fill-opacity="${f(fl)}" stroke="${WH}" stroke-width="2" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
+        g += `<path d="${d}" fill="none" stroke="${WH}" stroke-width="2" stroke-opacity="${f(1 - 0.6 * fl)}" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
         if (pp > 0 && pp < 1) {
           const a = Math.sin(Math.PI * pp), off = -ease.io(pp);
           g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="10" stroke-linecap="round" opacity="${f(0.25 * a)}" pathLength="1" stroke-dasharray="0.14 0.86" stroke-dashoffset="${off.toFixed(4)}"/>`;
@@ -760,13 +765,17 @@
   function actSignet(t) {
     let o = '';
     const pz = expoIO(seg(t, PH.zoom, PH.zoom + 1.1)), up = flow(seg(t, PH.rise, PH.rise + 0.9)) * FIN_DY;
-    GRID_KEYS.forEach((key, i) => {
+    // the three video windows fly into the signet together (● passes over and drops into its slot)
+    o += maskOver(GRID_KEYS.map((key, i) => {
       const big = sigBig(key), dx = GRID_X[i][2];
       const from = { ...big, x: big.x + dx }, to = shiftY(LK[SIG_OF[key]], up);
-      let g = lerpGeom(from, to, pz);
-      if (key === 'hitec') g = { ...g, y: g.y - 120 * Math.sin(Math.PI * clamp(pz * 1.15)) };
-      o += shape(g, ` fill="${WH}"`);
-    });
+      const g = lerpGeom(from, to, pz);
+      return key === 'hitec' ? { ...g, y: g.y - 120 * Math.sin(Math.PI * clamp(pz * 1.15)) } : g;
+    }), 1);
+    // hairline edge on the windows so the small signet keeps its shape
+    o += GRID_KEYS.map((key, i) => { const big = sigBig(key), from = { ...big, x: big.x + GRID_X[i][2] }, to = shiftY(LK[SIG_OF[key]], up);
+      let g = lerpGeom(from, to, pz); if (key === 'hitec') g = { ...g, y: g.y - 120 * Math.sin(Math.PI * clamp(pz * 1.15)) };
+      return `<path d="${outline(g)}" fill="none" stroke="${WH}" stroke-opacity="0.85" stroke-width="${f(lerp(1.5, 1, pz))}"/>`; }).join('');
     // the rest of the lockup flies in at the stop: GROUP + 24 from the left, the claim from the right
     const pG = ease3(seg(t, PH.dock, PH.dock + 0.7)), pT = ease3(seg(t, PH.dock + 0.1, PH.dock + 0.8));
     if (pG > 0) o += `<g transform="translate(${f(-(1 - pG) * 700)} ${f(up)}) ${lockT(0)}" fill="${WH}" opacity="${f(Math.min(1, pG * 3))}">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g>`;
