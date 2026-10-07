@@ -78,18 +78,18 @@ Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfiel
 | C7 | 14–17 | **H3** + MS WAY 24 |
 | C8 | 17–20 | Ujęcie zapada się w kwadrat ■ → A16–A18 (GROUP 24 wyciągany z kwadratu) |
 
-## D. Reveal — prezentacja systemu — `out/reveal.mp4` (15 s, 16:9, 60 fps)
+## D. Reveal — prezentacja systemu — `out/reveal.mp4` (20 s, 16:9, 60 fps)
 
-Lekka wersja: białe tło, linie włosowe, czerń i kolory marek tylko jako akcent; bez płyty z filmem. Ruch ciągły (fazy na siebie zachodzą, cubic in-out, kamera +4%). Kolejność marek wszędzie: **HI-TEC → KRAMAT → MS WAY**.
+Lekka wersja: białe tło, linie włosowe, czerń i kolory marek tylko jako akcent. Film pojawia się tylko dookoła białego kształtu marki. Ruch ciągły (fazy na siebie zachodzą, cubic in-out, kamera +4%). Kolejność marek wszędzie: **HI-TEC → KRAMAT → MS WAY**.
 
 | # | Czas | Akt | Kadr |
 |---|---|---|---|
 | D1 | 0,15–2,75 | Grupa | Trzy firmy jako trzy kształty: ● HI-TEC, ■ KRAMAT, ▛ MS WAY (gradienty marek), podpisy, linia łącząca, „3 COMPANIES — 1 GROUP”. Kształty zjeżdżają się w sygnet ■ ▛ ● (HI-TEC przechodzi łukiem pod spodem) |
 | D2 | 2,6–4,0 | Logo grupy | Z ■ wysuwa się GROUP 24, z ● hasło; sygnet przechodzi z koloru w czerń |
 | D3 | 4,15–5,55 | Stała | GROUP i hasło uciekają w górę pod maską, sygnet się chowa; samo „24” wychodzi na środek, rysuje się siatka 13×13 z opisami |
-| D4 | 5,85 / 6,95 / 8,05 | Ewolucja | Linia skanująca (kolor marki) przerysowuje „24”: grupa → HI-TEC → KRAMAT → MS WAY. Znaczniki w narożnikach siatki zmieniają kształt (kropki → kwadraty → ćwiartki), komórki ze zmieniającymi się detalami podświetlają się w kolorze marki; podpis z boku: nazwa + obietnica |
-| D5 | 9,15–11,3 | Zachowanie | „24” MS WAY wpada w swoje logo; HI-TEC i KRAMAT budują się nad nim. Trzy logotypy stoją na jednej osi „24” („24 — CONSTANT”) |
-| D6 | 11,3–15,0 | Finał | Nazwy się chowają, trzy „24” stają się jednym cienkim „24” grupy, znaczniki każdej marki składają się w jej kształt sygnetu (w kolorze), z „24” wysuwa się GROUP, z ● hasło: pełne logo |
+| D4 | 5,85 / 6,95 / 8,05 / 9,15 | Ewolucja | Linia skanująca (kolor marki) przerysowuje „24”: grupa → HI-TEC → KRAMAT → MS WAY → HI-TEC. Znaczniki w narożnikach siatki zmieniają kształt (kropki → kwadraty → ćwiartki), komórki ze zmieniającymi się detalami podświetlają się w kolorze marki; podpis z boku: nazwa + obietnica |
+| D5 | 10,0–16,3 | Zachowanie | Biała strona kurczy się do białego ● HI-TEC, a dookoła odsłania się film (most i jadąca ciężarówka). W kształcie czarne logo ze znacznikami, „24” w kolorze marki, hasło w dwóch liniach wyrównane do lewej krawędzi logotypu. Kształt przechodzi płynnie w ■ KRAMAT (12,2), potem w ▛ MS WAY (14,2); znaczniki zmieniają kształt, treść wymienia się bez pustego momentu |
+| D6 | 16,3–20,0 | Finał | Kształt otwiera się z powrotem w białą stronę. „24” MS WAY → cienkie „24” grupy, znaczniki składają się kolumnami w kolorowy sygnet ■ ▛ ●, z „24” wysuwa się GROUP, z ● hasło: pełne logo |
 
 ---
 
