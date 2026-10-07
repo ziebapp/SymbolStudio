@@ -78,21 +78,22 @@ Grafika = prototyp z kodu (alfa / ProRes 4444 do zrobienia). Footage = Higgsfiel
 | C7 | 14–17 | **H3** + MS WAY 24 |
 | C8 | 17–20 | Ujęcie zapada się w kwadrat ■ → A16–A18 (GROUP 24 wyciągany z kwadratu) |
 
-## D. Reveal — prezentacja systemu — `out/reveal.mp4` (14,6 s, 16:9, 60 fps)
+## D. Reveal — prezentacja systemu — `out/reveal.mp4` (15,4 s, 16:9, 60 fps)
 
-Ruch ciągły (fazy na siebie zachodzą, cubic in-out, kamera +4%). Kolejność marek wszędzie: **HI-TEC → KRAMAT → MS WAY**.
-Morfing „24”: [flubber](https://github.com/veltman/flubber) (`vendor/flubber.min.js`, MIT). Każda forma jest próbkowana do pierścieni, kawałki cyfr dopasowuje się po najbliższym środku, a gdy liczba kawałków się różni, kształty dzielą się albo łączą.
+Zasada: jedna rzecz naraz, każdy element albo stoi, albo porusza się po jednej czystej krzywej. Kolejność marek wszędzie: **HI-TEC → KRAMAT → MS WAY**.
+„24” jest konstrukcją parametryczną na siatce 5×5 komórek na cyfrę. Każda forma składa się z tych samych pięciu kawałków (2: górna belka + korpus; 4: belka, prawy górny, prawy dolny) z inną grubością i innymi narożnikami (ścięcie / promień / zaokrąglona końcówka). Morfing interpoluje wierzchołki i narożniki, więc każda klatka pośrednia jest czystym kształtem geometrycznym. Kształty zgadzają się z cyframi marek komórka w komórkę.
+Film: oryginalne zdjęcie (ciężarówka stoi w kadrze), wolny dryf kamery, przyciemnienie 30%.
 
 | # | Czas | Kadr |
 |---|---|---|
-| D1 | 0,15–0,9 | Na białym tle wjeżdża GROUP 24 (spod maski) |
-| D2 | 0,7–1,6 | Dolatują kształty: ■ z góry, ▛ z dołu, ● z prawej, i dokują w sygnet |
-| D3 | 1,75–2,45 | Wszystko przyciąga się do ■: poszerza się, ▛ i ● wchodzą do środka (szarzeją) |
-| D4 | 2,35–3,8 | ■ rośnie na szerokość w pasek z filmem, wypycha GROUP, połyka „24” (biel), od razu rośnie do pełnej wysokości kadru |
-| D5 | 3,15–4,5 | Na filmie rysuje się siatka 13×13 z opisami, „24” wpisuje się w siatkę |
-| D6 | 4,7 / 5,8 / 6,9 | Morfing kształtu „24”: grupa → HI-TEC → KRAMAT → MS WAY; znaczniki w narożnikach zmieniają kształt, detale podświetlają się w kolorze marki; z boku nazwa + obietnica w 2 liniach |
-| D7 | 8,0–10,3 | Białe obrysy ● ■ ▛ rysują się od lewej do prawej na całą szerokość (minimalny odstęp). W środku białe logo, hasło w 2 liniach od lewej krawędzi logotypu. „24” z siatki leci do logo HI-TEC, morfując z MS WAY w HI-TEC |
-| D8 | 11,4–13,2 | Obrysy składają się w biały sygnet grupy i wypełniają się; z ■ wysuwa się GROUP 24, z ● hasło; pod logo grupy układają się pełne logotypy marek w rzędzie |
+| D1 | 0,15–0,95 | Na białym tle wjeżdża GROUP 24 (spod maski) |
+| D2 | 0,75–1,7 | Z prawej dolatują ■, ▛, ● i dokują w sygnet |
+| D3 | 1,85–2,55 | ▛ i ● wsuwają się pod ■, który się poszerza |
+| D4 | 2,45–4,1 | ■ rośnie w lewo w pasek z filmem (przechodzi nad stojącym „24”, które w środku jest białe), dopycha GROUP, potem rośnie do pełnego kadru |
+| D5 | 3,95–5,05 | „24” płynnie przechodzi na siatkę (jeden ruch, odstęp cyfr 2 → 1 komórka); siatka się rysuje |
+| D6 | 5,4 / 6,5 / 7,6 | Morfing: grupa → HI-TEC → KRAMAT → MS WAY; znaczniki w narożnikach zmieniają kształt, detale podświetlają się w kolorze marki |
+| D7 | 8,8–11,1 | Białe obrysy ● ■ ▛ rysują się od lewej do prawej na całą szerokość; w środku białe logo i hasło w 2 liniach. „24” z siatki leci do logo HI-TEC, morfując z MS WAY w HI-TEC |
+| D8 | 12,2–14,6 | Logotypy schodzą do rzędu, obrysy maleją w miejscu na linię lockupu, ■ i ▛ przesuwają się na miejsce, ● przechodzi górą i wpada pionowo; wypełnienie na końcu; z ■ wysuwa się GROUP 24, z ● hasło |
 
 ---
 
