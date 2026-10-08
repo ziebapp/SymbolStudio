@@ -806,8 +806,10 @@
   // final row of brand logos under the group lockup
   const ROW_Y = 640;
   let ROWL = null;
-  const rowLayout = () => ROWL || (ROWL = (() => { const s0 = 30, gap = 90, ws = GRID_KEYS.map(k => BRANDS[k].w * s0 / BRANDS[k].h), tot = ws.reduce((a, b) => a + b, 0) + gap * 2;
-    let x = W / 2 - tot / 2; const out = {};
+  // the brand row spans exactly the group lockup's width: left edge of GROUP → right edge of the claim
+  const rowLayout = () => ROWL || (ROWL = (() => { const s0 = 40, ws = GRID_KEYS.map(k => BRANDS[k].w * s0 / BRANDS[k].h);
+    const x0 = GROUP_L, x1 = TAG_R, gap = (x1 - x0 - ws.reduce((a, b) => a + b, 0)) / 2;
+    let x = x0; const out = {};
     GRID_KEYS.forEach((k, i) => { const s = s0 / BRANDS[k].h; out[k] = { ox: x, oy: ROW_Y - s0 / 2, s, lh: s0 }; x += ws[i] + gap; });
     return out; })());
 
