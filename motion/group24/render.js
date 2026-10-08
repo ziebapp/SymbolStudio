@@ -14,6 +14,13 @@ const fs = require('fs'), path = require('path');
   const sub = blurArg > 0 ? +process.argv[blurArg + 1] : 1;
   const outDir = path.join(__dirname, 'out');
   fs.mkdirSync(outDir, { recursive: true });
+  // footage clip → JPEG sequence the SVG engine can address frame by frame (git-ignored, rebuilt on demand)
+  const bgDir = path.join(__dirname, 'img', 'bg');
+  if (!fs.existsSync(path.join(bgDir, '0300.jpg'))) {
+    fs.mkdirSync(bgDir, { recursive: true });
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.join(__dirname, 'img', 'bg-hitec-kramat.mp4'),
+      '-q:v', '2', path.join(bgDir, '%04d.jpg')]);
+  }
 
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });

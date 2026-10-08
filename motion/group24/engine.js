@@ -552,13 +552,18 @@
     return d;
   }
 
-  // ---------- footage: the original still (truck stays in the photo), framed tight, slow drift, darkened ----------
+  // ---------- footage: client drone clip (img/bg-hitec-kramat.mp4 → img/bg/NNNN.jpg, extracted by render.js) ----------
+  // 300 frames @ 29.97 played at 0.8× across 2.9–15.4 s; neighbouring frames cross-blend so the 60 fps master has no judder
+  const BG = { n: 300, fps: 30000 / 1001, t0: 2.9, rate: 0.8 };
+  const bgFrame = i => `img/bg/${String(i + 1).padStart(4, '0')}.jpg`;
   function footage(t) {
-    const u = t / PH.end, s = 1.6 * (1 + 0.035 * u), dx = -26 * u, dy = 9 * u;
+    const u = t / PH.end, s = 1.08 * (1 + 0.035 * u), dx = -26 * u, dy = 9 * u;
     // once only the signet windows remain, the footage brightens so the small signet still reads
     const lift = seg(t, PH.fill, PH.zoom + 0.8), dark = 0.3 * (1 - lift);
-    return `<g transform="translate(${f(960 + dx)} ${f(540 + dy)}) scale(${s.toFixed(5)}) translate(-880 -600)"${lift > 0 ? ` style="filter:brightness(${(1 + 0.9 * lift).toFixed(3)}) contrast(${(1 + 0.15 * lift).toFixed(3)})"` : ''}>` +
-      `<image href="img/photo.jpg" x="0" y="0" width="1920" height="1441" preserveAspectRatio="none"/></g>` +
+    const ft = clamp((t - BG.t0) * BG.rate * BG.fps, 0, BG.n - 1.001), i = Math.floor(ft), fr = ft - i;
+    const img = (k, op) => `<image href="${bgFrame(k)}" x="0" y="0" width="1920" height="1080" preserveAspectRatio="none"${op < 1 ? ` opacity="${op.toFixed(3)}"` : ''}/>`;
+    return `<g transform="translate(${f(960 + dx)} ${f(540 + dy)}) scale(${s.toFixed(5)}) translate(-960 -540)"${lift > 0 ? ` style="filter:brightness(${(1 + 0.9 * lift).toFixed(3)}) contrast(${(1 + 0.15 * lift).toFixed(3)})"` : ''}>` +
+      img(i, 1) + (fr > 0.01 ? img(i + 1, fr) : '') + '</g>' +
       (dark > 0 ? `<rect x="-40" y="-40" width="${W + 80}" height="${H + 80}" fill="#000" opacity="${f(dark)}"/>` : '');
   }
 
