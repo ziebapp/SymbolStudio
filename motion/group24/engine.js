@@ -578,9 +578,11 @@
   // the plate: ■ → a band that takes in 24, shapes and claim → full frame
   const BAND = (() => { const x0 = LK24.x + LX - 40, x1 = TAG_R + LX + 40, h = LK[0].h * 1.9;
     return { x: x0, y: H / 2 - h / 2, w: x1 - x0, h, r: [0, 0, 0, 0] }; })();
+  // one continuous curve ■ → (towards the band) → full frame: a quadratic Bézier through the band, so it never brakes halfway
+  const plateU = t => bez(0.55, 0, 0.2, 1)(seg(t, PH.absorb, PH.full + 1.35));
   function plateGeom(t) {
-    const pa = flow(seg(t, PH.absorb, PH.absorb + 0.8)), pf = bez(0.6, 0, 0.1, 1)(seg(t, PH.full, PH.full + 1.35));   // the frame opens slowly, lands softly
-    return lerpGeom(lerpGeom(sx(LK[0]), BAND, pa), FULLG, pf);
+    const u = plateU(t), a = lerpGeom(sx(LK[0]), BAND, u), b = lerpGeom(BAND, FULLG, u);
+    return lerpGeom(a, b, u);
   }
   function actOpen(t) {
     let o = '';
@@ -594,10 +596,9 @@
     // the 24: drawn as a path (2 from its top-left corner down, then 4), then filled; pulled to the centre; then onto the grid
     const tr = bez(0.4, 0, 0.2, 1), p2 = tr(seg(t, PH.trim, PH.trim + 0.6)), p4a = tr(seg(t, PH.trim + 0.5, PH.trim + 0.85)), p4b = tr(seg(t, PH.trim + 0.75, PH.trim + 1.1));
     const PL = { ...P_LOCK(), ox: P_LOCK().ox + LX };
-    const wThin = (THIN.o + 5) * PL.c;
-    const PC = { ...PL, ox: W / 2 - wThin / 2 };                    // the 24 centred in the band
-    const pS = flow(seg(t, PH.settle, PH.settle + 1.0));
-    const P24 = lerpP(lerpP(PL, PC, pa), P_GRID(), pS);
+    // the 24 travels from the lockup straight onto the grid in one movement (no stop in the middle)
+    const pS = bez(0.5, 0, 0.18, 1)(seg(t, PH.absorb + 0.15, PH.settle + 1.0));
+    const P24 = lerpP(PL, P_GRID(), pS);
     const F24 = lerpForm(form24('thin'), form24('thinG'), pS);
     const filled = p4b >= 1;
     const draw = color => filled ? draw24(F24, P24, color) : thinStrokes(P24, p2, p4a, p4b, color);
@@ -724,6 +725,18 @@
       if (i === 0) TFS().forEach((x, j) => { const form = FORMS[j + 1], end = TFS()[j + 1] || PH.textOut;
         g += hlCells(form, ease.out(seg(t, x + 0.6, x + 0.9)) * (1 - seg(t, end, end + 0.3))); });
       g += hlCells(key, ease.out(seg(t, PH.compare, PH.compare + 0.4)) * (1 - seg(t, PH.logos, PH.logos + 0.4)));
+      // signet outline on the grid's edges (70 % grey, a second level under the logo); a pulse of brand colour runs once
+      // around it; when the video mask takes over, the outline trims itself off
+      const pd = flow(seg(t, PH.outline + i * 0.12, PH.outline + 0.9 + i * 0.12)), tr = flow(seg(t, PH.fill + 0.05, PH.fill + 0.75));
+      if (pd > 0 && tr < 1) {
+        const d = outline(sigBig(key)), pp = seg(t, PH.pulse + i * 0.12, PH.pulse + 1.1 + i * 0.12);
+        g += tr > 0 ? `<path d="${d}" fill="none" stroke="#4D4D4D" stroke-width="2" pathLength="1" stroke-dasharray="${f(1 - tr)} 1" stroke-dashoffset="${f(-tr)}"/>`
+                    : `<path d="${d}" fill="none" stroke="#4D4D4D" stroke-width="2" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
+        if (pp > 0 && pp < 1) {
+          const dl = 0.12 * Math.min(1, pp / 0.15, (1 - pp) / 0.15), head = ease.io(pp);
+          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="4" stroke-linecap="butt" pathLength="1" stroke-dasharray="${f(dl)} ${f(1 - dl)}" stroke-dashoffset="${(-head + dl).toFixed(4)}"/>`;
+        }
+      }
       // the 24: grid 0 morphs through the styles (and back to HI-TEC as it starts to slide); then each shrinks into its logo
       let F;
       if (i === 0) {
@@ -754,17 +767,6 @@
         mk += shape(scaleAbout(mg, 1 - logoOut));
       }
       g += `<g fill="${WH}">${mk}</g>`;
-      // signet outline on the grid's edges; a pulse of light in the brand colour runs once around it; then it fills
-      const pd = flow(seg(t, PH.outline + i * 0.12, PH.outline + 0.9 + i * 0.12));
-      if (pd > 0 && t < PH.zoom) {
-        const d = outline(sigBig(key)), pp = seg(t, PH.pulse + i * 0.12, PH.pulse + 1.1 + i * 0.12), fl = seg(t, PH.fill + 0.15, PH.fill + 0.55);
-        g += `<path d="${d}" fill="none" stroke="#4D4D4D" stroke-width="2" stroke-opacity="${f(1 - 0.6 * fl)}" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
-        if (pp > 0 && pp < 1) {
-          const a = Math.sin(Math.PI * pp), off = -ease.io(pp);
-          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="14" stroke-linecap="round" opacity="${f(0.4 * a)}" pathLength="1" stroke-dasharray="0.14 0.86" stroke-dashoffset="${off.toFixed(4)}"/>`;
-          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="4" stroke-linecap="round" opacity="${f(a)}" pathLength="1" stroke-dasharray="0.1 0.9" stroke-dashoffset="${off.toFixed(4)}"/>`;
-        }
-      }
       o += `<g transform="translate(${f(dx)} 0)">${g}</g>`;
     });
     // labels + caption around the first grid only, until the slide
@@ -794,12 +796,12 @@
     const type = ink => (pG > 0 ? `<g transform="translate(${f(-(1 - pG) * 700)} ${f(up)}) ${lockT(0)}" fill="${ink}" opacity="${f(Math.min(1, pG * 3))}">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g>` : '') +
       (pT > 0 ? `<g transform="translate(${f((1 - pT) * 500)} ${f(up)}) ${lockT(0)}" fill="${ink}" opacity="${f(Math.min(1, pT * 3))}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g>` : '');
     // dark state: footage only inside the signet windows, white type
-    o += maskOver(win, 1) + win.map(g => `<path d="${outline(g)}" fill="none" stroke="${WH}" stroke-opacity="0.85" stroke-width="${f(lerp(1.5, 1, pz))}"/>`).join('') + type(WH);
-    // light state grows out of the signet as a clean circle: white ground, black signet, black type
-    const pi = bez(0.55, 0, 0.2, 1)(seg(t, PH.invert, PH.invert + 0.85));
+    o += maskOver(win, 1) + type(WH);
+    // light state: the signet's ■ scales up to the full frame — white ground, black signet, black type
+    const pi = bez(0.6, 0, 0.15, 1)(seg(t, PH.invert, PH.invert + 0.9));
     if (pi > 0) {
-      const c = win[1], cx = c.x + c.w / 2, cy = c.y + c.h / 2, R = pi * 1500;
-      o += `<clipPath id="inv"><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(R)}"/></clipPath><g clip-path="url(#inv)">` +
+      const R = lerpGeom(win[0], FULLG, pi);
+      o += `<clipPath id="inv"><path d="${rr(R)}"/></clipPath><g clip-path="url(#inv)">` +
         `<rect x="-200" y="-200" width="${W + 400}" height="${H + 400}" fill="#fff"/>` + win.map(g => shape(g, ` fill="${INKC}"`)).join('') + type(INKC) + '</g>';
     }
     // the brand row flies in under it, each logo lights up in its colour left → right, then settles in black
@@ -827,7 +829,7 @@
 
   const zoomAbout = (dx, s, cx = W / 2, cy = H / 2) => `translate(${f(dx + cx)} ${f(cy)}) scale(${s.toFixed(5)}) translate(${-cx} ${-cy})`;
   // camera: a gentle zoom-out through the opening, then a very slow drift
-  const camR = t => lerp(1.06, 1.0, bez(0.3, 0, 0.3, 1)(seg(t, 0, PH.full + 0.6))) + 0.02 * bez(0.4, 0, 0.6, 1)(seg(t, PH.full + 0.6, PH.end));
+  const camR = t => lerp(1.06, 1.0, bez(0.3, 0.05, 0.35, 1)(t / PH.end));   // one monotone drift — never stops, never reverses
   function reveal(t) {
     clipId = 0;
     let body = '';
