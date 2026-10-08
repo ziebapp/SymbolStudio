@@ -578,7 +578,9 @@ const stroked = (node, px) => { STROKED.push([node, px]); return node; };
 // tło + obrys elementu (obrys rysowany kreską o długości 0→1)
 function boxPart(d, parent) {
   const g = el('g', {}, parent);
-  return { g, fill: el('path', { d }, g), line: stroked(el('path', { d, ...strokeAttrs(drawAttrs) }, g), STROKE) };
+  // wypełnienie ma kontur w swoim kolorze, który przykrywa krawędź wideo pod spodem (bez ciemnej obwódki)
+  const fill = stroked(el('path', { d, 'vector-effect': 'non-scaling-stroke', 'stroke-linejoin': 'round' }, g), 1.5);
+  return { g, fill, line: stroked(el('path', { d, ...strokeAttrs(drawAttrs) }, g), STROKE) };
 }
 
 // linie konstrukcyjne i wielkie kształty (pod znakiem)
@@ -750,7 +752,9 @@ function render(t) {
   for (const [part, fill, fop, draw] of boxes) {
     const b = M[part];
     setPart(b.g, part, t);
-    b.fill.setAttribute('fill', rgb(at(fill, t)));
+    const fc = rgb(at(fill, t));
+    b.fill.setAttribute('fill', fc);
+    b.fill.setAttribute('stroke', fc);
     b.fill.setAttribute('opacity', op(at(fop, t)));
     const d = at(draw, t);
     b.line.style.display = d > 0.001 && olOp > 0.001 ? '' : 'none';
