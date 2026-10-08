@@ -416,7 +416,8 @@
   // =====================================================================
   // tightened timeline: every act starts while the previous one is still settling — no dead holds
   const PH = { in: 0.15, trim: 0.45, fall: 1.5, claim: 2.1, absorb: 2.55, full: 3.05, settle: 3.95, grid: 4.0, f1: 5.1, f2: 5.95, f3: 6.8,
-               textOut: 7.55, slide: 7.7, compare: 9.2, logos: 9.85, outline: 10.55, pulse: 11.35, fill: 12.35, zoom: 12.85, dock: 13.7, rise: 14.45, end: 16.6 };
+               textOut: 7.55, slide: 7.7, compare: 9.2, logos: 9.85, outline: 10.55, pulse: 11.35, fill: 12.35, zoom: 12.85, dock: 13.7,
+               invert: 14.5, rise: 14.95, row: 15.35, glow: 16.2, end: 18.2 };
   // cubic-bezier easing (CSS semantics) — each kind of motion gets its own curve, nothing moves on the same symmetric one
   function bez(x1, y1, x2, y2) {
     const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
@@ -708,8 +709,8 @@
     return { ox: W / 2 - b.w * s / 2, oy: LOGO_CY - b.h * s / 2, s, lh: b.h * s };
   }
   // one compound path: the frame with the three signet shapes cut out — the footage stays only inside them
-  const maskOver = (shapes, op) => op <= 0 ? '' :
-    `<path fill-rule="evenodd" fill="#050505" opacity="${f(op)}" d="M-200 -200H${W + 200}V${H + 200}H-200Z ${shapes.map(outline).join(' ')}"/>`;
+  const maskOver = (shapes, op, color = '#050505') => op <= 0 ? '' :
+    `<path fill-rule="evenodd" fill="${color}" opacity="${f(op)}" d="M-200 -200H${W + 200}V${H + 200}H-200Z ${shapes.map(outline).join(' ')}"/>`;
   function actGrids(t) {
     let o = maskOver(GRID_KEYS.map((key, i) => { const g = sigBig(key); return { ...g, x: g.x + GRID_X[i][2] }; }), seg(t, PH.fill + 0.1, PH.fill + 0.6));
     const gA = 1 - seg(t, PH.outline + 0.9, PH.outline + 1.3);                 // grids fade once the outlines are drawn
@@ -757,11 +758,11 @@
       const pd = flow(seg(t, PH.outline + i * 0.12, PH.outline + 0.9 + i * 0.12));
       if (pd > 0 && t < PH.zoom) {
         const d = outline(sigBig(key)), pp = seg(t, PH.pulse + i * 0.12, PH.pulse + 1.1 + i * 0.12), fl = seg(t, PH.fill + 0.15, PH.fill + 0.55);
-        g += `<path d="${d}" fill="none" stroke="${WH}" stroke-width="2" stroke-opacity="${f(1 - 0.6 * fl)}" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
+        g += `<path d="${d}" fill="none" stroke="#4D4D4D" stroke-width="2" stroke-opacity="${f(1 - 0.6 * fl)}" pathLength="1" stroke-dasharray="${f(pd)} 1"/>`;
         if (pp > 0 && pp < 1) {
           const a = Math.sin(Math.PI * pp), off = -ease.io(pp);
-          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="10" stroke-linecap="round" opacity="${f(0.25 * a)}" pathLength="1" stroke-dasharray="0.14 0.86" stroke-dashoffset="${off.toFixed(4)}"/>`;
-          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="3" stroke-linecap="round" opacity="${f(a)}" pathLength="1" stroke-dasharray="0.1 0.9" stroke-dashoffset="${off.toFixed(4)}"/>`;
+          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="14" stroke-linecap="round" opacity="${f(0.4 * a)}" pathLength="1" stroke-dasharray="0.14 0.86" stroke-dashoffset="${off.toFixed(4)}"/>`;
+          g += `<path d="${d}" fill="none" stroke="${ACCENT[key]}" stroke-width="4" stroke-linecap="round" opacity="${f(a)}" pathLength="1" stroke-dasharray="0.1 0.9" stroke-dashoffset="${off.toFixed(4)}"/>`;
         }
       }
       o += `<g transform="translate(${f(dx)} 0)">${g}</g>`;
@@ -773,33 +774,44 @@
   }
   // zoom out: the three video windows rush into the signet — accelerates, then brakes hard but smooth
   const expoIO = bez(0.7, 0, 0.12, 1);
+  const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const ACCENT_L = { kramat: '#E3541F', msway: '#43A05B', hitec: '#2A9A8E' };   // brand colours that hold up on white
+  const sigWindows = (t, pz, up) => GRID_KEYS.map((key, i) => { const big = sigBig(key);
+    return lerpGeom({ ...big, x: big.x + GRID_X[i][2] }, shiftY(LK[SIG_OF[key]], up), pz); });
+  // the footage is pulled in with the windows: one transform mapping the middle window onto the ▛
+  function footageZoomT(t) {
+    const pz = expoIO(seg(t, PH.zoom, PH.zoom + 1.2)), up = flow(seg(t, PH.rise, PH.rise + 0.9)) * FIN_DY;
+    const B = sigBig('msway'), T = shiftY(LK[1], up), k = lerp(1, T.h / B.h, pz);
+    const c0 = [B.x + B.w / 2, B.y + B.h / 2], c1 = [T.x + T.w / 2, T.y + T.h / 2];
+    return `translate(${f(lerp(c0[0], c1[0], pz))} ${f(lerp(c0[1], c1[1], pz))}) scale(${k.toFixed(5)}) translate(${f(-c0[0])} ${f(-c0[1])})`;
+  }
   function actSignet(t) {
     let o = '';
     const pz = expoIO(seg(t, PH.zoom, PH.zoom + 1.2)), up = flow(seg(t, PH.rise, PH.rise + 0.9)) * FIN_DY;
-    // the three video windows fly straight into the signet — already in signet order, nothing swaps
-    o += maskOver(GRID_KEYS.map((key, i) => {
-      const big = sigBig(key), dx = GRID_X[i][2];
-      const from = { ...big, x: big.x + dx }, to = shiftY(LK[SIG_OF[key]], up);
-      const g = lerpGeom(from, to, pz);
-      return g;
-    }), 1);
-    // hairline edge on the windows so the small signet keeps its shape
-    o += GRID_KEYS.map((key, i) => { const big = sigBig(key), from = { ...big, x: big.x + GRID_X[i][2] }, to = shiftY(LK[SIG_OF[key]], up);
-      const g = lerpGeom(from, to, pz);
-      return `<path d="${outline(g)}" fill="none" stroke="${WH}" stroke-opacity="0.85" stroke-width="${f(lerp(1.5, 1, pz))}"/>`; }).join('');
-    // the rest of the lockup flies in at the stop: GROUP + 24 from the left, the claim from the right
+    const win = sigWindows(t, pz, up);
+    // the rest of the lockup flies in as the zoom brakes: GROUP + 24 from the left, the claim from the right
     const pG = ease3(seg(t, PH.dock, PH.dock + 0.7)), pT = ease3(seg(t, PH.dock + 0.1, PH.dock + 0.8));
-    if (pG > 0) o += `<g transform="translate(${f(-(1 - pG) * 700)} ${f(up)}) ${lockT(0)}" fill="${WH}" opacity="${f(Math.min(1, pG * 3))}">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g>`;
-    if (pT > 0) o += `<g transform="translate(${f((1 - pT) * 500)} ${f(up)}) ${lockT(0)}" fill="${WH}" opacity="${f(Math.min(1, pT * 3))}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g>`;
-    // the three brand logos appear under it
+    const type = ink => (pG > 0 ? `<g transform="translate(${f(-(1 - pG) * 700)} ${f(up)}) ${lockT(0)}" fill="${ink}" opacity="${f(Math.min(1, pG * 3))}">${[...GRP.grp, ...GRP.d24].map(d => `<path d="${d}"/>`).join('')}</g>` : '') +
+      (pT > 0 ? `<g transform="translate(${f((1 - pT) * 500)} ${f(up)}) ${lockT(0)}" fill="${ink}" opacity="${f(Math.min(1, pT * 3))}">${GRP.tag.map(d => `<path d="${d}"/>`).join('')}</g>` : '');
+    // dark state: footage only inside the signet windows, white type
+    o += maskOver(win, 1) + win.map(g => `<path d="${outline(g)}" fill="none" stroke="${WH}" stroke-opacity="0.85" stroke-width="${f(lerp(1.5, 1, pz))}"/>`).join('') + type(WH);
+    // light state grows out of the signet as a clean circle: white ground, black signet, black type
+    const pi = bez(0.55, 0, 0.2, 1)(seg(t, PH.invert, PH.invert + 0.85));
+    if (pi > 0) {
+      const c = win[1], cx = c.x + c.w / 2, cy = c.y + c.h / 2, R = pi * 1500;
+      o += `<clipPath id="inv"><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(R)}"/></clipPath><g clip-path="url(#inv)">` +
+        `<rect x="-200" y="-200" width="${W + 400}" height="${H + 400}" fill="#fff"/>` + win.map(g => shape(g, ` fill="${INKC}"`)).join('') + type(INKC) + '</g>';
+    }
+    // the brand row flies in under it, each logo lights up in its colour left → right, then settles in black
     const RL = rowLayout();
     GRID_KEYS.forEach((key, i) => {
-      const k = seg(t, PH.rise + 0.4 + i * 0.12, PH.rise + 1.0 + i * 0.12);
+      const k = enterE(seg(t, PH.row + i * 0.14, PH.row + 0.75 + i * 0.14));
       if (k <= 0) return;
-      const L = RL[key];
-      o += logo(key, L, { nameIn: k, nameOut: 0, digitsIn: k, digitsOut: 0 }, WH);
-      let mk = ''; for (let sl = 0; sl < 6; sl++) mk += shape(scaleAbout(markerGeom(key, sl, L), ease.out(k)));
-      o += `<g fill="${WH}">${mk}</g>`;
+      const g0 = PH.glow + i * 0.28, a = flow(seg(t, g0, g0 + 0.3)) * (1 - flow(seg(t, g0 + 0.6, g0 + 1.0)));
+      const col = rgb(mixC(INK, hexRGB(ACCENT_L[key]), a));
+      const L = { ...RL[key], oy: RL[key].oy + (1 - k) * 46 };
+      let mk = ''; for (let sl = 0; sl < 6; sl++) mk += shape(markerGeom(key, sl, L));
+      o += `<g opacity="${f(Math.min(1, k * 1.6))}">${logo(key, L, { nameIn: 1, nameOut: 0, digitsIn: 1, digitsOut: 0 }, col)}<g fill="${col}">${mk}</g></g>`;
     });
     return o;
   }
@@ -819,7 +831,7 @@
   function reveal(t) {
     clipId = 0;
     let body = '';
-    if (t >= PH.full + 0.95) body += footage(t);
+    if (t >= PH.full + 0.95) body += t >= PH.zoom ? `<g transform="${footageZoomT(t)}">${footage(t)}</g>` : footage(t);
     if (t < PH.f1 + 0.01) body += actOpen(t);
     if (t >= PH.grid && t < PH.zoom + 0.01) body += actGrids(t);
     if (t >= PH.zoom) body += actSignet(t);
