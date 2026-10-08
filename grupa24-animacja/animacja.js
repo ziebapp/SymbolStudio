@@ -29,7 +29,15 @@ const N = ANCHORS * 30;              // punktów na kontur
 const CAMERA = 0.08;                 // najazd kamery przez całą animację
 const STROKE = 2;                    // obrysy konstrukcyjne sygnetów: zawsze 2 px
 const SVGNS = 'http://www.w3.org/2000/svg';
-const VIDEO_SRC = new URLSearchParams(location.search).get('video') || 'assets/truck.mp4';
+const VIDEO_PARAM = new URLSearchParams(location.search).get('video');
+// wideo z drona: WebM (Chrome/Firefox) i MP4 (Safari); zdjęcie assets/truck.jpg zostaje jako zapas
+const VIDEO_SOURCES = VIDEO_PARAM ? [[VIDEO_PARAM, '']] : [['assets/truck.webm', 'video/webm'], ['assets/truck.mp4', 'video/mp4']];
+/*
+ * Czas wideo dla czasu animacji. Wideo jest widoczne w dwóch odcinkach
+ * (0–8.8 s i 14.2–21.4 s), więc każdy dostaje własny start — bez cięcia w kadrze.
+ */
+const VIDEO_LEN = 10;
+const videoTime = t => Math.min(VIDEO_LEN - 0.05, Math.max(0, t < 11 ? t : t - 13));
 
 /* ------------------------------------------------------------------ easing */
 
@@ -687,7 +695,7 @@ function render(t) {
   if (vOp > 0.001) {
     const s = at(T.vidS, t) * 1.06;
     const c = mix(at(T.vidC, t), markCenter(t), at(T.vidFollow, t));
-    const drift = 28 - 56 * (t / DURATION);   // ciężarówka powoli „jedzie” w górę-lewo
+    const drift = hasVideo ? 0 : 28 - 56 * (t / DURATION);   // na samym zdjęciu: powolny ruch kamery
     vinner.style.transform = `translate(${c[0].toFixed(2)}px,${c[1].toFixed(2)}px) scale(${s.toFixed(5)}) translate(${(-CX + drift).toFixed(2)}px,${(-CY + drift / 2).toFixed(2)}px)`;
     if (t < FLY_HIT) {
       // ramka = dokładne granice obrazu
@@ -792,17 +800,34 @@ function fit() {
 addEventListener('resize', fit);
 fit();
 
-// opcjonalne prawdziwe wideo: assets/truck.mp4 (albo ?video=ścieżka)
+// wideo (gdy się nie wczyta, zostaje zdjęcie)
+let hasVideo = false;
 const video = document.createElement('video');
-Object.assign(video, { muted: true, loop: true, playsInline: true, preload: 'auto' });
-video.addEventListener('loadeddata', () => { vinner.classList.add('has-video'); syncVideo(); });
-video.addEventListener('error', () => video.remove());
+Object.assign(video, { muted: true, playsInline: true, preload: 'auto' });
+for (const [src, type] of VIDEO_SOURCES) {
+  const so = document.createElement('source');
+  so.src = src;
+  if (type) so.type = type;
+  video.appendChild(so);
+}
+video.addEventListener('loadeddata', () => { hasVideo = true; vinner.classList.add('has-video'); syncVideo(true); render(time); });
 vinner.insertBefore(video, vinner.querySelector('.shade'));
-video.src = VIDEO_SRC;
-function syncVideo() {
-  if (!video.duration) return;
-  video.currentTime = time % video.duration;
+// trzyma wideo w zgodzie z osią czasu (przy przewijaniu, pętli i przejściu między odcinkami)
+function syncVideo(force = false) {
+  if (!hasVideo) return;
+  const vt = videoTime(time);
+  if (force || Math.abs(video.currentTime - vt) > 0.25) video.currentTime = vt;
   if (playing) video.play().catch(() => {}); else video.pause();
+}
+// eksport klatka po klatce: ustaw wideo dokładnie na klatkę i poczekaj na nią
+function seekVideoExact(t) {
+  if (!hasVideo) return Promise.resolve();
+  video.pause();
+  return new Promise(res => {
+    const done = () => { video.removeEventListener('seeked', done); res(); };
+    video.addEventListener('seeked', done);
+    video.currentTime = videoTime(t);
+  });
 }
 
 // klatki z Figmy (momenty, w których scena jest w danym układzie)
@@ -835,7 +860,7 @@ function updateUI() {
 function seek(t, keepPlaying = playing) {
   time = Math.max(0, Math.min(DURATION, t));
   playing = keepPlaying;
-  syncVideo();
+  syncVideo(true);
   render(time);
   updateUI();
 }
@@ -860,7 +885,8 @@ addEventListener('mousemove', () => {
 function tick(now) {
   if (last !== null && playing) {
     time += Math.min(0.1, (now - last) / 1000);
-    if (time >= DURATION) { time -= DURATION; syncVideo(); }
+    if (time >= DURATION) time -= DURATION;
+    syncVideo();
     render(time);
     updateUI();
   }
@@ -873,5 +899,11 @@ updateUI();
 requestAnimationFrame(tick);
 
 // do eksportu klatka po klatce (np. Playwright → ffmpeg)
-window.G24 = { render: t => { time = t; render(t); }, DURATION, FRAMES, pause: () => { playing = false; updateUI(); } };
+window.G24 = {
+  render: t => { time = t; render(t); },
+  renderExact: async t => { playing = false; time = t; await seekVideoExact(t); render(t); },
+  hasVideo: () => hasVideo,
+  DURATION, FRAMES,
+  pause: () => { playing = false; updateUI(); },
+};
 })();

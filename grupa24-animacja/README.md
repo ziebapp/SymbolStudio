@@ -35,16 +35,19 @@ Każdy obrys zaczyna się w tym samym miejscu (po lewej) i biegnie zgodnie z ruc
 - suwak: przewijanie (scena jest funkcją czasu, więc każda pozycja jest dokładna)
 - parametry URL: `?clean` ukrywa pasek (do nagrywania), `?t=12` zaczyna od 12. sekundy, `?paused` startuje zatrzymane
 
-## Prawdziwe wideo zamiast zdjęcia
+## Wideo
 
-Wrzuć plik `assets/truck.mp4`, a strona użyje go automatycznie (albo wskaż inny plik przez `?video=sciezka.mp4`).
-Jeśli wideo nie istnieje, używane jest zdjęcie `assets/truck.jpg` z delikatnym ruchem kamery.
-Wideo dostaje 50% przyciemnienia, tak jak w Figmie.
+Tło to ujęcie z drona: `assets/truck.webm` (VP9, dla Chrome i Firefox) oraz `assets/truck.mp4` (H.264, dla Safari).
+Ma 10 s i jest widoczne w dwóch odcinkach animacji (0–8.8 s i 14.2–21.4 s). Każdy odcinek ma własny start w materiale, więc w kadrze nie ma cięcia.
+Wideo jest zsynchronizowane z osią czasu (przewijanie, pętla), a przy eksporcie MP4 jest ustawiane dokładnie na każdą klatkę.
+`assets/truck.jpg` to pierwsza klatka, która zostaje jako zapas, gdy wideo się nie wczyta. Inny plik można wskazać przez `?video=sciezka.mp4`.
+Przyciemnienie pod biały napis wynosi 20%.
 
 ## Pliki
 
 - `animacja.js`: oś czasu, morfing konturów i render
 - `logo-data.js`: wektory z Figmy (logo GRUPA 24, logotypy marek, kształty ramek). Plik generowany, nie edytuj go ręcznie.
-- `assets/truck.jpg`: kadr z ciężarówką z Figmy
+- `assets/truck.webm`, `assets/truck.mp4`: wideo z drona
+- `assets/truck.jpg`: pierwsza klatka wideo (zapas)
 
 Czasy wszystkich ruchów są zebrane w `animacja.js` (stałe `MOVES`, `T`, `CLIP`, `SLOT_*`, `FIN_*`), więc tempo można stroić w jednym miejscu.

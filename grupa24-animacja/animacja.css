@@ -19,8 +19,8 @@ body { font: 13px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; color: #
 .video-inner video { opacity: 0; }
 .video-inner.has-video video { opacity: 1; }
 .video-inner.has-video img { visibility: hidden; }
-/* Zdjęcie/wideo przyciemnione jak w Figmie (50% czerni) */
-.shade { position: absolute; inset: 0; background: rgba(0, 0, 0, .5); }
+/* Lekkie przyciemnienie pod biały napis (materiał z drona jest już ciemny) */
+.shade { position: absolute; inset: 0; background: rgba(0, 0, 0, .2); }
 
 .overlay { position: absolute; inset: 0; overflow: visible; }
 .fade { position: absolute; inset: 0; background: #fff; pointer-events: none; }
