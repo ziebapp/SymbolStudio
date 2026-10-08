@@ -39,7 +39,7 @@ Każdy obrys zaczyna się w tym samym miejscu (po lewej) i biegnie zgodnie z ruc
 
 Tło to ujęcie z drona: `assets/truck.webm` (VP9, dla Chrome i Firefox) oraz `assets/truck.mp4` (H.264, dla Safari).
 Ma 10 s i jest widoczne w dwóch odcinkach animacji (0–8.8 s i 14.2–21.4 s). Każdy odcinek ma własny start w materiale, więc w kadrze nie ma cięcia.
-Wideo jest zsynchronizowane z osią czasu (przewijanie, pętla), a przy eksporcie MP4 jest ustawiane dokładnie na każdą klatkę.
+Wideo jest zsynchronizowane z osią czasu (przewijanie, pętla). Do eksportu MP4 strona przyjmuje parametr `?frames=katalog` z klatkami JPG wyciętymi z wideo (`ffmpeg -i assets/truck.mp4 -q:v 2 katalog/f%04d.jpg`). Wtedy każda klatka animacji dostaje dokładnie swoją klatkę wideo, bo przeglądarka bez okna nie odświeża pewnie obrazu `<video>` po przewinięciu.
 `assets/truck.jpg` to pierwsza klatka, która zostaje jako zapas, gdy wideo się nie wczyta. Inny plik można wskazać przez `?video=sciezka.mp4`.
 Przyciemnienie pod biały napis wynosi 20%.
 

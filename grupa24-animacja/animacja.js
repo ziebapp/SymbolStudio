@@ -37,6 +37,7 @@ const VIDEO_SOURCES = VIDEO_PARAM ? [[VIDEO_PARAM, '']] : [['assets/truck.webm',
  * (0–8.8 s i 14.2–21.4 s), więc każdy dostaje własny start — bez cięcia w kadrze.
  */
 const VIDEO_LEN = 10;
+const params0 = new URLSearchParams(location.search);
 const videoTime = t => Math.min(VIDEO_LEN - 0.05, Math.max(0, t < 11 ? t : t - 13));
 
 /* ------------------------------------------------------------------ easing */
@@ -800,11 +801,21 @@ function fit() {
 addEventListener('resize', fit);
 fit();
 
+/*
+ * Tryb eksportu (?frames=katalog): zamiast <video> podstawiamy klatki JPG
+ * (f0001.jpg… z ffmpeg, 30 fps), bo przeglądarka bez okna nie odświeża
+ * pewnie obrazu wideo po przewinięciu. W zwykłym podglądzie gra <video>.
+ */
+const FRAMES_DIR = params0.get('frames');
+const VIDEO_FPS = 30;
+const frameImg = vinner.querySelector('img');
+const frameNo = t => Math.max(1, Math.min(Math.round(VIDEO_LEN * VIDEO_FPS), Math.floor(videoTime(t) * VIDEO_FPS) + 1));
+
 // wideo (gdy się nie wczyta, zostaje zdjęcie)
-let hasVideo = false;
+let hasVideo = !!FRAMES_DIR;
 const video = document.createElement('video');
 Object.assign(video, { muted: true, playsInline: true, preload: 'auto' });
-for (const [src, type] of VIDEO_SOURCES) {
+if (!FRAMES_DIR) for (const [src, type] of VIDEO_SOURCES) {
   const so = document.createElement('source');
   so.src = src;
   if (type) so.type = type;
@@ -814,19 +825,34 @@ video.addEventListener('loadeddata', () => { hasVideo = true; vinner.classList.a
 vinner.insertBefore(video, vinner.querySelector('.shade'));
 // trzyma wideo w zgodzie z osią czasu (przy przewijaniu, pętli i przejściu między odcinkami)
 function syncVideo(force = false) {
-  if (!hasVideo) return;
+  if (!hasVideo || FRAMES_DIR) return;
   const vt = videoTime(time);
   if (force || Math.abs(video.currentTime - vt) > 0.25) video.currentTime = vt;
   if (playing) video.play().catch(() => {}); else video.pause();
 }
 // eksport klatka po klatce: ustaw wideo dokładnie na klatkę i poczekaj na nią
+// (po „seeked” czekamy jeszcze, aż nowa klatka wideo zostanie faktycznie wyświetlona)
 function seekVideoExact(t) {
+  if (FRAMES_DIR) {
+    frameImg.src = `${FRAMES_DIR}/f${String(frameNo(t)).padStart(4, '0')}.jpg`;
+    return frameImg.decode().catch(() => {});
+  }
   if (!hasVideo) return Promise.resolve();
   video.pause();
+  const target = videoTime(t);
+  if (Math.abs(video.currentTime - target) < 1e-4) return Promise.resolve();
   return new Promise(res => {
-    const done = () => { video.removeEventListener('seeked', done); res(); };
-    video.addEventListener('seeked', done);
-    video.currentTime = videoTime(t);
+    let finished = false;
+    const finish = () => { if (!finished) { finished = true; res(); } };
+    const onSeeked = () => {
+      video.removeEventListener('seeked', onSeeked);
+      if (video.requestVideoFrameCallback) {
+        video.requestVideoFrameCallback(() => finish());
+        setTimeout(finish, 250);           // ta sama klatka co poprzednio — nie będzie callbacku
+      } else requestAnimationFrame(() => requestAnimationFrame(finish));
+    };
+    video.addEventListener('seeked', onSeeked);
+    video.currentTime = target;
   });
 }
 
